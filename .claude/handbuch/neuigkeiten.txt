@@ -1,0 +1,5 @@
+# Neuigkeiten für das Kollegium: Was sich an Regeln, Werkzeugen und Abläufen ändert. Erscheint im Handbuch unter "Was ist neu".
+# Eine Zeile je Neuigkeit, neueste oben: TT.MM.JJJJ | ein Satz, ohne Technik, aus Sicht der Kolleg/innen.
+# Änderungen an Lernpaketen stehen automatisch drin (aus der Änderungsliste jedes Pakets).
+# Die Prüfung pruefen.py sorgt dafür, dass Änderungen an Skills, Vorlagen, Regeln und Hooks hier oder im Handbuch landen.
+16.11.2026 | Der Projektleitfaden und die Kurzübersicht für den Einstieg sind jetzt im Repository enthalten.

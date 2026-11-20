@@ -1,0 +1,462 @@
+<!--
+  BAUKASTEN Testvorbereitung (Skill Baue-Testvorbereitung). Keine fertige Seite, sondern die Teile, die
+  scripts/neue-seite.py in eine Kopie von Fachunterricht.html einsetzt:
+    stil    -> nach <!-- /Fachunterricht.html:head -->            unverändert, wird mit --aktualisieren erneuert
+    app     -> statt <main>, Gerüst: Reiter, Abschnitte, Prüfung    je Thema füllen
+    main    -> das Kapitel in <main> mit dem Ergebnisfeld           je Thema anpassen (Lösungsvorschlag)
+    script  -> nach <!-- /Fachunterricht.html:scripts -->         unverändert, wird mit --aktualisieren erneuert
+    thema   -> nach dem Script: Aufgaben, Prüfung, Papier           je Thema schreiben (Anleitung: SKILL.md, aufgaben.md)
+  Die Markierungen <!-- Testvorbereitung:NAME --> und <!-- /Testvorbereitung:NAME --> nie entfernen.
+-->
+
+<!-- Testvorbereitung:stil -->
+<style>
+/* Baukasten Testvorbereitung (Skill Baue-Testvorbereitung). Nicht von Hand ändern: neue-seite.py --aktualisieren */
+.tvapp{--bg:#f4f6f5;--fg:#1b2830;--mut:#596973;--card:#fff;--line:#d2dbdf;--blue:#1d5a86;--ok:#16805e;--warn:#b26a00;--bad:#c1392f;--hl:#fff1b8;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .tvapp{--bg:#11181d;--fg:#e8edf0;--mut:#9aa8b1;--card:#1a232a;--line:#33424c;--blue:#78b8e6;--ok:#4cc79d;--warn:#f0b24a;--bad:#ff7f74;--hl:#4d4416;color-scheme:dark}}
+:root[data-theme="dark"] .tvapp{--bg:#11181d;--fg:#e8edf0;--mut:#9aa8b1;--card:#1a232a;--line:#33424c;--blue:#78b8e6;--ok:#4cc79d;--warn:#f0b24a;--bad:#ff7f74;--hl:#4d4416;color-scheme:dark}
+.tvapp{background:var(--bg);color:var(--fg);font:17px/1.55 "Avenir Next","Segoe UI",system-ui,sans-serif;box-sizing:border-box}
+.tvapp.wrap{margin:18px auto;padding:16px;border-radius:12px}
+.tvapp *,.tvapp *::before,.tvapp *::after{box-sizing:border-box}
+.tvapp h2{font-size:1.3rem;margin:0 0 .5em;padding-left:.6em;border-left:5px solid var(--blue)}
+.tvapp h3{margin:1.2em 0 .4em;font-size:1.15rem}
+.tvapp .lead{color:var(--mut);margin:0 0 1em}
+.tvapp section.tv-sec{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:0 0 18px}
+.tvapp p{margin:.5em 0}
+.tvapp .f{background:var(--bg);border-radius:8px;padding:10px 14px;margin:.6em 0;font-weight:600}
+.tvapp .merke{background:var(--hl);border-radius:8px;padding:10px 14px;margin:.6em 0}
+.tvapp .sc{overflow-x:auto}
+.tvapp table{border-collapse:collapse;width:100%;margin:.4em 0}
+.tvapp th,.tvapp td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:middle}
+.tvapp th{background:var(--bg)}
+.tvapp button,.tvapp input,.tvapp select{font:inherit;color:var(--fg);background:var(--card);border:1.5px solid var(--line);border-radius:8px;min-height:44px;padding:6px 10px}
+.tvapp button{cursor:pointer;background:var(--bg);font-weight:600}
+.tvapp button[aria-pressed="true"],.tvapp button.pri{background:var(--blue);color:var(--card);border-color:var(--blue)}
+.tvapp input[type=text]{width:9em;max-width:100%}
+.tvapp input.lang{width:16em}
+.tvapp button:focus-visible,.tvapp input:focus-visible,.tvapp select:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.tvapp .bar{display:flex;gap:8px;flex-wrap:wrap;margin:.5em 0}
+.tvapp .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}.tvapp .tabs button{flex:1 1 auto}
+.tvapp .m{color:var(--mut);font-size:.92rem}
+.tvapp .err{color:var(--bad);font-weight:600}
+.tvapp [hidden]{display:none!important}
+.tvapp .good{border-color:var(--ok)!important;box-shadow:0 0 0 2px var(--ok)}
+.tvapp .badf{border-color:var(--bad)!important;box-shadow:0 0 0 2px var(--bad)}
+.tvapp .key{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;background:var(--bg);border:2px solid var(--blue);border-radius:10px;padding:10px 16px;margin:.6em 0;font-size:1.5rem;font-weight:700}
+.tvapp .kc{background:var(--blue);color:var(--card);border-radius:8px;padding:3px 12px;font-size:1rem;font-weight:600}
+.tvapp .tv-ub{border:2px dashed var(--line);border-radius:10px;padding:10px 14px;margin:1em 0 0}
+.tvapp .tv-niv{display:inline-block;margin-left:.5em;padding:1px 10px;border-radius:999px;font-size:.8rem;font-weight:700;color:#fff;vertical-align:middle}
+.tvapp .tv-niv.einsteiger{background:#1f5fae}.tvapp .tv-niv.pruefung{background:#c0392b}.tvapp .tv-niv.profi{background:#111}
+.tvapp .tv-fd{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:8px 0}
+.tvapp .tv-fd > span:first-child{min-width:12em}
+.tvapp .tv-ck{display:flex;gap:10px;align-items:center;padding:4px 0}
+.tvapp .tv-ck input{width:24px;height:24px;min-height:0}
+.tvapp .tv-lsg{color:var(--ok);font-weight:700}
+.tvapp .tv-weg{background:var(--bg);border-left:4px solid var(--ok);border-radius:6px;padding:8px 12px;margin:.6em 0}
+.tvapp .ex{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;background:var(--card)}
+.tvapp .tm{position:sticky;top:0;z-index:5;background:var(--card);border:2px solid var(--blue);border-radius:10px;padding:6px 14px;font-size:1.3rem;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tvapp .tm.lo{border-color:var(--bad);color:var(--bad)}
+.tvapp .res{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:3px solid var(--blue);border-radius:12px;padding:8px 16px;margin:8px 0;font-size:1.2rem;font-weight:700}
+.tvapp .gr{font-size:2.6rem;font-weight:800;color:var(--blue)}
+#tvPd{background:var(--card,#fff);color:var(--fg,#1b2830);border:2px solid var(--blue,#1d5a86);border-radius:12px;width:calc(100% - 32px);max-width:560px;padding:14px 18px;max-height:calc(100dvh - 32px)}
+#tvPd::backdrop{background:rgba(0,0,0,.55)}
+#tvPd fieldset{border:1px solid var(--line);border-radius:8px;margin:10px 0;padding:6px 12px 10px}
+#tvPd legend{font-weight:700;padding:0 4px}
+#tvPd .pg{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+#tvPd input[type=number]{width:5em;min-height:36px;padding:2px 8px}
+#tvPp{display:none}
+@media(prefers-reduced-motion:reduce){.tvapp *{scroll-behavior:auto!important}}
+@media print{
+  .tvapp:not(#tvPp){display:none!important}
+  body.tv-pp{background:#fff;color:#000;font:10.5pt/1.4 "Avenir Next","Segoe UI",system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.tv-pp main,body.tv-pp dialog,body.tv-pp .titleblock,body.tv-pp #page-error,body.tv-pp #saveAlarm{display:none!important}
+  body.tv-pp #tvPp{display:block!important;background:#fff;color:#000;padding:0;margin:0}
+}
+#tvPp *{color:#000}
+#tvPp .pgb{break-before:page}
+#tvPp .ph{display:flex;justify-content:space-between;border-bottom:2px solid #000;padding-bottom:3px;margin-bottom:8px;font-size:9.5pt}
+#tvPp h1{font-size:17pt;margin:0 0 4px}
+#tvPp h2{font-size:12.5pt;margin:12px 0 5px;padding:0;border:0}
+#tvPp h3{font-size:11pt;margin:8px 0 4px}
+#tvPp p{margin:3px 0 6px}
+#tvPp .nm{display:flex;flex-wrap:wrap;gap:6px 22px;margin:4px 0 10px}
+#tvPp .ln{display:inline-block;min-width:7em;border-bottom:1px solid #000;height:1.25em;vertical-align:bottom}
+#tvPp .ln.w{min-width:14em}
+#tvPp table{border-collapse:collapse;width:100%;margin:4px 0}
+#tvPp th,#tvPp td{border:1px solid #000;padding:3px 6px;background:#fff;text-align:left;vertical-align:middle}
+#tvPp th{background:#eee}
+#tvPp .tsk{break-inside:avoid;border:1px solid #000;border-radius:4px;padding:6px 10px;margin:0 0 9px}
+#tvPp .key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:14pt;font-weight:700;margin:4px 0;border:0;padding:0;background:#fff}
+#tvPp .kc{background:#fff;border:1px solid #000;border-radius:5px;padding:1px 8px;font-size:9.5pt;font-weight:600}
+#tvPp .bx{display:inline-block;width:1.05em;height:1.05em;border:1.3px solid #000;margin-right:.35em;vertical-align:-.18em;text-align:center;line-height:1em;font-weight:800}
+#tvPp .it{margin:5px 0}
+#tvPp .op{margin:2px 0 2px 1.2em}
+#tvPp .m{color:#333;font-size:9.5pt}
+#tvPp .f,#tvPp .merke{background:#f2f2f2;border-radius:4px;padding:5px 10px;margin:4px 0}
+#tvPp .tv-weg{border-left:3px solid #000;padding:2px 8px;margin:4px 0}
+#tvPp sub,#tvPp sup{font-size:.7em}
+</style>
+<!-- /Testvorbereitung:stil -->
+
+<!-- Testvorbereitung:app -->
+<div class="wrap tvapp no-pdf" id="tvApp">
+<p class="lead">Lernskript mit Übungen zur Vorbereitung auf den Test. Erst lesen, dann üben, dann die Prüfung simulieren.</p>
+<div class="bar"><button type="button" id="tvPapier">Papierversion drucken / als PDF</button></div>
+<nav class="tabs" id="tvTabs" aria-label="Reiter"></nav>
+
+<!-- Je Teilthema ein Abschnitt. data-reiter = Name des Reiters (mehrere Abschnitte dürfen denselben Reiter haben).
+     Lerninhalte, die auch auf die Papierversion sollen (Formeln, Tabellen, Merksätze), bekommen class="tv-skript".
+     Übung zum Teilthema: <div class="tv-uebung" data-aufgabe="ID"></div> (mehrere IDs mit Komma: Auswahlknöpfe). -->
+<section class="tv-sec" data-reiter="Teilthema 1">
+<h2>Teilthema 1</h2>
+<div class="tv-skript">
+<p>Lerninhalt aus den Unterlagen.</p>
+</div>
+<div class="tv-uebung" data-aufgabe="beispiel"></div>
+</section>
+
+<section class="tv-sec" data-reiter="Prüfung">
+<h2>Prüfungssimulation</h2>
+<div id="tvPruefung"></div>
+</section>
+</div>
+<!-- /Testvorbereitung:app -->
+
+<!-- Testvorbereitung:main -->
+<main class="wrap">
+<section class="ch">
+<h2>Prüfungssimulation</h2>
+<div class="task" id="a1">
+<span class="tt">Aufgabe 1 - Prüfungssimulation</span>
+<p>Starte oben im Reiter „Prüfung“ die Prüfungssimulation und gib sie dort ab. Dein Ergebnis wird hier automatisch angezeigt. Du kannst die Prüfung mit neuen Aufgaben wiederholen: Angezeigt wird dein bestes Ergebnis. Das Skript wird nicht bewertet, es dient nur zum Üben.</p>
+<p>Ergebnis der Prüfungssimulation: <output id="simErg" style="font-weight:700">noch keine Prüfung gemacht</output></p>
+<details class="sol"><summary>Lösungsvorschlag</summary>
+<p>Die Lösungen deiner Aufgaben zeigt die Prüfungssimulation nach dem Abgeben direkt unter jeder Aufgabe. Rechenweg bzw. Merksätze aus dem Lernskript:</p>
+<p>Kurzfassung der Formeln und Regeln aus den Unterlagen.</p>
+</details>
+</div>
+</section>
+</main>
+<!-- /Testvorbereitung:main -->
+
+<!-- Testvorbereitung:script -->
+<script>
+/* Baukasten Testvorbereitung (Skill Baue-Testvorbereitung). Nicht von Hand ändern: neue-seite.py --aktualisieren.
+   Das Thema kommt aus TV.thema({...}) im Block "Testvorbereitung:thema" (Anleitung: aufgaben.md). */
+(function () {
+  'use strict';
+  var NOTEN = [92, 81, 67, 50, 30];            /* Schulnotenskala: Note 1 ab 92 %, 2 ab 81 %, 3 ab 67 %, 4 ab 50 %, 5 ab 30 % */
+  var q = function (s, r) { return (r || document).querySelector(s); };
+  var qa = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+  var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+  var red = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Zufall: in der Papierversion mit fester Variante (gleiche Variante = gleiche Aufgaben) */
+  var rnd = Math.random;
+  var mulberry = function (s) { return function () { s = s + 0x6D2B79F5 | 0; var t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
+  function mitSaat(saat, f) { var a = rnd, m = Math.random; rnd = mulberry(saat); Math.random = rnd; try { return f(); } finally { rnd = a; Math.random = m; } }
+
+  var TV = {};
+  TV.zufall = function () { return rnd(); };
+  TV.ganz = function (a, b) { return a + Math.floor(rnd() * (b - a + 1)); };
+  TV.wahl = function (arr) { return arr[Math.floor(rnd() * arr.length)]; };
+  TV.mische = function (arr) { var a = arr.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+  TV.runde = function (x, st) { var f = Math.pow(10, st == null ? 2 : st); return Math.round(x * f + (x >= 0 ? 1e-9 : -1e-9)) / f; };
+  /* Zahl deutsch: Komma, echtes Minus, höchstens st Nachkommastellen (Nullen am Ende weg), optional mit +-Zeichen */
+  TV.zahl = function (x, st, plus) {
+    var r = TV.runde(x, st == null ? 2 : st), s = String(Math.abs(r));
+    if (/e/.test(s)) s = Math.abs(r).toFixed(st == null ? 2 : st).replace(/\.?0+$/, '');
+    s = s.replace('.', ',');
+    return (r < 0 ? '−' : (plus && r > 0 ? '+' : '')) + s;
+  };
+  TV.lies = function (s) { s = String(s).replace(/\s/g, '').replace(/[−–]/g, '-').replace(',', '.').replace(/[^0-9.+\-eE]/g, ''); return s === '' ? NaN : parseFloat(s); };
+  TV.gegeben = function (t) { return '<span class="kc">' + t + '</span>'; };
+  /* Fragenpool: Liste aus Aufgaben (Objekt oder Funktion). Gezogen wird zufällig, in der Prüfung ohne Wiederholung. */
+  TV.pool = function (liste) { return function () { var a = TV.wahl(liste); return typeof a === 'function' ? a() : JSON.parse(JSON.stringify(a)); }; };
+  /* Einzelfrage mit Auswahl aus Pool-Einträgen der Form [Frage, richtig, falsch, falsch, ...] */
+  TV.auswahl = function (titel, eintraege, anzahl) {
+    return function () {
+      var e = TV.mische(eintraege).slice(0, anzahl || 1);
+      return { titel: titel, felder: e.map(function (x) { return { typ: 'wahl', label: x[0], optionen: TV.mische(x.slice(1)), loesung: x[1] }; }) };
+    };
+  };
+
+  var C = null, AUF = {};
+  function punkteFeld(f) { return f.punkte != null ? f.punkte : (f.typ === 'kreuze' ? 2 : 1); }
+  function punkte(a) { return a.felder.reduce(function (s, f) { return s + punkteFeld(f); }, 0); }
+  function lsgText(f) {
+    if (f.typ === 'zahl') return TV.zahl(f.loesung, f.stellen, f.vorzeichen) + (f.einheit ? ' ' + f.einheit : '');
+    if (f.typ === 'text') return [].concat(f.loesung)[0];
+    if (f.typ === 'wahl') return f.loesung;
+    return f.optionen.filter(function (o) { return o[1]; }).map(function (o) { return o[0]; }).join('; ');
+  }
+  function norm(s) { return String(s).trim().toLowerCase().replace(/\s+/g, ' '); }
+  /* Ein Feld bewerten: gibt erreichte Punkte zurück */
+  function bewerte(f, el) {
+    if (f.typ === 'kreuze') {
+      var fehl = f.optionen.filter(function (o, i) { return q('[data-i="' + i + '"]', el).checked !== !!o[1]; }).length;
+      var p = punkteFeld(f); return fehl === 0 ? p : (fehl === 1 && p > 1 ? p - 1 : 0);
+    }
+    var e = q('input,select', el), v = e.value;
+    if (f.typ === 'zahl') { var x = TV.lies(v), st = f.stellen == null ? 2 : f.stellen, tol = f.tol != null ? f.tol : 0.5 * Math.pow(10, -st) + 1e-9; return !isNaN(x) && Math.abs(x - f.loesung) <= tol ? punkteFeld(f) : 0; }
+    if (f.typ === 'text') return [].concat(f.loesung).some(function (l) { return norm(l) === norm(v); }) ? punkteFeld(f) : 0;
+    return v === f.loesung ? punkteFeld(f) : 0;
+  }
+  /* Bildschirm: Aufgabe mit Eingabefeldern */
+  var uid = 0;
+  function feldHtml(f) {
+    var id = 'tvf' + (++uid);
+    if (f.typ === 'kreuze') return '<div class="tv-fd" data-typ="kreuze">' + (f.label ? '<span>' + f.label + '</span>' : '') + '<div>' + f.optionen.map(function (o, i) { return '<label class="tv-ck"><input type="checkbox" data-i="' + i + '">' + o[0] + '</label>'; }).join('') + '</div></div>';
+    var lab = '<label for="' + id + '">' + (f.label || '') + '</label>';
+    if (f.typ === 'wahl') return '<div class="tv-fd"><span>' + lab + '</span><select id="' + id + '"><option value="">wählen</option>' + f.optionen.map(function (o) { return '<option value="' + esc(o) + '">' + o + '</option>'; }).join('') + '</select></div>';
+    return '<div class="tv-fd"><span>' + lab + '</span><input type="text" id="' + id + '" inputmode="' + (f.typ === 'zahl' ? 'decimal' : 'text') + '" autocomplete="off"' + (f.typ === 'text' ? ' class="lang"' : '') + '>' + (f.einheit ? ' <span>' + f.einheit + '</span>' : '') + '</div>';
+  }
+  function aufgabeHtml(a, nr, mitPunkten) {
+    return (nr ? '<b>Aufgabe ' + nr + ': ' + a.titel + '</b>' + (mitPunkten ? ' <span class="m">(' + punkte(a) + ' P)</span>' : '') : '<b>' + a.titel + '</b>') +
+      (a.frage ? '<p>' + a.frage + '</p>' : '') + (a.gegeben ? '<div class="key">' + a.gegeben + '</div>' : '') +
+      a.felder.map(feldHtml).join('');
+  }
+  function zeigeLoesung(a, box, nurFalsche) {
+    qa('.tv-fd', box).forEach(function (el, i) {
+      var f = a.felder[i], p = bewerte(f, el), ok = p === punkteFeld(f);
+      qa('input,select', el).forEach(function (e) { e.classList.toggle('good', ok); e.classList.toggle('badf', !ok); });
+      var alt = q('.tv-lsg', el); if (alt) alt.remove();
+      if (!ok || !nurFalsche) el.insertAdjacentHTML('beforeend', '<span class="tv-lsg">Lösung: ' + lsgText(f) + '</span>');
+    });
+  }
+
+  /* Übung unter einem Abschnitt */
+  function uebung(el) {
+    var ids = el.getAttribute('data-aufgabe').split(',').map(function (s) { return s.trim(); }).filter(function (s) { return AUF[s]; });
+    if (!ids.length) { el.innerHTML = '<p class="err">Übung "' + esc(el.getAttribute('data-aufgabe')) + '" fehlt im Thema.</p>'; return; }
+    var id = ids[0], a = null, ok = 0, tot = 0, gez = false;
+    var NIV = { einsteiger: 'Einsteigerniveau', pruefung: 'Prüfungsniveau', profi: 'Profiniveau' };
+    var niv = function () { var n = AUF[id].niveau; return NIV[n] ? '<span class="tv-niv ' + n + '">' + NIV[n] + '</span>' : ''; };
+    el.classList.add('tv-ub');
+    el.innerHTML = '<h3>Übung<span data-r="v"></span></h3>' + (ids.length > 1 ? '<div class="bar" role="group" aria-label="Aufgabenart">' + ids.map(function (k) { return '<button type="button" data-m="' + k + '" aria-pressed="' + (k === id) + '">' + AUF[k].name + '</button>'; }).join('') + '</div>' : '') +
+      '<div data-r="a"></div><div class="bar"><button type="button" class="pri" data-r="c">Prüfen</button><button type="button" data-r="s">Lösung zeigen</button><button type="button" data-r="n">Neue Aufgabe</button></div><p data-r="f" aria-live="polite"></p><p class="m" data-r="p"></p>';
+    var r = function (n) { return q('[data-r="' + n + '"]', el); };
+    var stand = function () { r('p').textContent = 'Richtig gelöst: ' + ok + ' von ' + tot + ' Aufgaben'; };
+    function neu() {
+      a = AUF[id].gen(); gez = false;
+      r('v').innerHTML = niv();
+      r('a').innerHTML = aufgabeHtml(a); r('f').textContent = ''; stand();
+      if (AUF[id].beiNeu) try { AUF[id].beiNeu(a); } catch (e) { console.error(e); }
+    }
+    r('c').onclick = function () {
+      var p = 0, m = punkte(a);
+      qa('.tv-fd', r('a')).forEach(function (fe, i) { p += bewerte(a.felder[i], fe); });
+      zeigeLoesung(a, r('a'), true);
+      if (!gez) { gez = true; tot++; if (p === m) ok++; }
+      r('f').innerHTML = p === m ? '<b style="color:var(--ok)">Alles richtig!</b>' : '<b>' + p + ' von ' + m + ' Punkten.</b>' + (a.hinweis ? ' ' + a.hinweis : ' Schau dir die Lösung an und rechne nach.');
+      if (a.weg && p !== m) r('f').insertAdjacentHTML('beforeend', '<div class="tv-weg">' + a.weg + '</div>');
+      stand(); if (AUF[id].beiLoesung) try { AUF[id].beiLoesung(a); } catch (e) { console.error(e); }
+    };
+    r('s').onclick = function () {
+      zeigeLoesung(a, r('a'), false);
+      r('f').innerHTML = a.weg ? '<div class="tv-weg">' + a.weg + '</div>' : '';
+      if (!gez) { gez = true; tot++; } stand();
+      if (AUF[id].beiLoesung) try { AUF[id].beiLoesung(a); } catch (e) { console.error(e); }
+    };
+    r('n').onclick = neu;
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.matches('input[type=text]')) { e.preventDefault(); r('c').click(); } });
+    qa('[data-m]', el).forEach(function (b) { b.onclick = function () { id = b.getAttribute('data-m'); qa('[data-m]', el).forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); neu(); }; });
+    neu();
+  }
+
+  /* Prüfungsaufgaben ziehen: aus jeder Aufgabenart die gewünschte Anzahl, möglichst ohne Wiederholung */
+  function ziehe(liste) {
+    var T = [];
+    liste.forEach(function (z) {
+      var seen = {};
+      for (var i = 0; i < z[1]; i++) {
+        var a, k, n = 0;
+        do { a = AUF[z[0]].gen(); k = a.titel + '|' + (a.frage || '') + '|' + (a.gegeben || '') + '|' + a.felder.map(function (f) { return f.label; }).join('|'); } while (seen[k] && ++n < 25);
+        seen[k] = 1; T.push(a);
+      }
+    });
+    return T;
+  }
+  function note(p, m) { var x = m ? p / m * 100 : 0; for (var i = 0; i < NOTEN.length; i++) if (x >= NOTEN[i] - 1e-9) return i + 1; return 6; }
+  function notenTabelle(M) {
+    var g = NOTEN.map(function (x) { return Math.ceil(M * x / 100 - 1e-9); }), o = g.concat([0]), u = [M].concat(g.map(function (x) { return x - 1; }));
+    return '<table><tr><th>Note</th>' + o.map(function (x, i) { return '<th>' + (i + 1) + '</th>'; }).join('') + '</tr><tr><th>Punkte</th>' + o.map(function (x, i) { return '<td>' + (x >= u[i] ? x : x + ' bis ' + u[i]) + '</td>'; }).join('') + '</tr></table>';
+  }
+
+  /* Prüfungssimulation */
+  var EX = null, T0 = 0, tmr = 0, bestes = null;
+  function pruefung() {
+    var box = q('#tvPruefung'); if (!box) return;
+    var P = C.pruefung, min = P.minuten;
+    box.innerHTML = '<div id="tvPi"><p>' + min + ' Minuten' + (P.hilfsmittel ? ', Hilfsmittel: ' + P.hilfsmittel : '') + '. ' + (P.text || 'Die Aufgaben sind wie im Test.') + ' Am Ende siehst du Punkte und Note. Jede Prüfung hat neue Aufgaben.</p><div class="bar"><button type="button" class="pri" id="tvPs">Prüfung starten</button><button type="button" id="tvPb">Probetest auf Papier</button></div></div><div id="tvPr"></div><div id="tvPx"></div>';
+    q('#tvPs').onclick = start;
+    q('#tvPb').onclick = function () { papierDialog(true); };
+    function start() {
+      EX = ziehe(P.aufgaben); q('#tvPi').hidden = true; q('#tvPr').innerHTML = '';
+      q('#tvPx').innerHTML = '<div class="tm" id="tvPt"><span>Restzeit <span id="tvPc">' + min + ':00</span></span><button type="button" class="pri" id="tvPa">Abgeben</button></div>' +
+        EX.map(function (a, k) { return '<div class="ex" data-k="' + k + '">' + aufgabeHtml(a, k + 1, true) + '</div>'; }).join('');
+      T0 = Date.now() + min * 60000; clearInterval(tmr);
+      tmr = setInterval(function () { var s = Math.max(0, Math.round((T0 - Date.now()) / 1000)); q('#tvPc').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); q('#tvPt').classList.toggle('lo', s < 180); if (!s) ende(); }, 500);
+      q('#tvPa').onclick = ende; q('#tvPx').scrollIntoView({ behavior: red ? 'auto' : 'smooth' });
+    }
+    function ende() {
+      clearInterval(tmr);
+      var tot = 0, max = 0, used = Math.max(0, Math.min(min * 60, Math.round((min * 60000 - (T0 - Date.now())) / 1000)));
+      EX.forEach(function (a, k) {
+        var ex = q('.ex[data-k="' + k + '"]'), p = 0;
+        qa('.tv-fd', ex).forEach(function (fe, i) { p += bewerte(a.felder[i], fe); });
+        zeigeLoesung(a, ex, true); qa('input,select', ex).forEach(function (e) { e.disabled = true; });
+        if (a.weg && p < punkte(a)) ex.insertAdjacentHTML('beforeend', '<div class="tv-weg">' + a.weg + '</div>');
+        ex.insertAdjacentHTML('beforeend', '<p class="m">' + p + ' von ' + punkte(a) + ' Punkten</p>');
+        tot += p; max += punkte(a);
+      });
+      var no = note(tot, max);
+      q('#tvPt').hidden = true;
+      q('#tvPr').innerHTML = '<div class="res"><span class="gr">Note ' + no + '</span><span>' + TV.zahl(tot, 1) + ' von ' + max + ' Punkten<br>Zeit: ' + Math.floor(used / 60) + ':' + String(used % 60).padStart(2, '0') + ' Minuten</span></div><p class="m">Notenschlüssel: 1 ab 92 %, 2 ab 81 %, 3 ab 67 %, 4 ab 50 %, 5 ab 30 %, darunter 6. Unten siehst du deine Fehler mit den Lösungen.</p><div class="bar"><button type="button" class="pri" id="tvPn">Neue Prüfung</button></div>';
+      q('#tvPn').onclick = start; q('#tvPr').scrollIntoView({ behavior: red ? 'auto' : 'smooth' });
+      /* bestes Ergebnis ins Feld der Aufgabe im Kapitel (Seite ohne Bewertung: nur Anzeige) */
+      var f = q('#simErg');
+      if (f && !document.body.classList.contains('submitted') && (!bestes || tot / max > bestes[0] / bestes[1])) {
+        bestes = [tot, max];
+        f.value = TV.zahl(tot, 1) + ' von ' + max + ' Punkten (Note ' + no + ', bestes Ergebnis)';
+        f.textContent = f.value;
+        f.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  }
+
+  /* Papierversion */
+  var BX = '<span class="bx"></span>', XB = '<span class="bx">✗</span>';
+  function papierAufgabe(a, nr, s, mitPunkten) {
+    var h = '<div class="tsk"><b>Aufgabe ' + nr + ': ' + a.titel + '</b>' + (mitPunkten ? ' <span class="m">(' + punkte(a) + ' P)</span>' : '') + (a.frage ? '<p>' + a.frage + '</p>' : '') + (a.gegeben ? '<div class="key">' + a.gegeben + '</div>' : '');
+    h += a.felder.map(function (f) {
+      if (f.typ === 'kreuze') return (f.label ? '<div class="it">' + f.label + '</div>' : '') + f.optionen.map(function (o) { return '<div class="op">' + (s && o[1] ? XB : BX) + o[0] + '</div>'; }).join('');
+      if (f.typ === 'wahl') { var kurz = f.optionen.every(function (o) { return String(o).length < 16; }); return '<div class="it">' + (f.label || '') + (kurz ? '<br>' + f.optionen.map(function (o) { return (s && o === f.loesung ? XB : BX) + o; }).join('&emsp;') : f.optionen.map(function (o) { return '<div class="op">' + (s && o === f.loesung ? XB : BX) + o + '</div>'; }).join('')) + '</div>'; }
+      return '<div class="it">' + (f.label || '') + ' ' + (s ? '<b>' + lsgText(f) + '</b>' : '<span class="ln' + (f.typ === 'text' ? ' w' : '') + '"></span>' + (f.einheit ? ' ' + f.einheit : '')) + '</div>';
+    }).join('');
+    if (s && a.weg) h += '<div class="tv-weg">' + a.weg + '</div>';
+    return h + '</div>';
+  }
+  function skriptHtml() {
+    return qa('#tvApp .tv-sec').map(function (sec) {
+      var teile = qa('.tv-skript', sec); if (!teile.length) return '';
+      var h2 = q('h2', sec);
+      return (h2 ? '<h2>' + h2.innerHTML + '</h2>' : '') + teile.map(function (t) {
+        var c = t.cloneNode(true);
+        qa('button,input,select,textarea,.tv-uebung,.no-print,script,style', c).forEach(function (n) { n.remove(); });
+        return c.innerHTML;
+      }).join('');
+    }).join('');
+  }
+  function baue(o) {
+    var V = o.v, T = C.titel, ids = Object.keys(AUF);
+    var H = function (t) { return '<div class="ph"><span><b>' + T + '</b> · ' + t + '</span><span>Variante ' + V + '</span></div>'; };
+    var NM = '<div class="nm"><span>Name: <span class="ln w"></span></span><span>Klasse: <span class="ln"></span></span><span>Datum: <span class="ln"></span></span></div>';
+    var U = [];
+    ids.forEach(function (id, s) { for (var i = 0; i < (o.n[id] || 0); i++) U.push(mitSaat(V * 7919 + (s + 1) * 131 + i, AUF[id].gen)); });
+    var X = o.p ? mitSaat(V * 7919 + 997, function () { return ziehe(C.pruefung.aufgaben); }) : null;
+    var M = X ? X.reduce(function (s, a) { return s + punkte(a); }, 0) : 0, P = [];
+    if (o.l !== 'only') {
+      if (o.s) P.push(H('Lernskript') + '<h1>' + T + ' – Lernskript</h1>' + skriptHtml());
+      if (U.length) P.push(H('Übungsaufgaben') + '<h1>' + T + ' – Übungsaufgaben</h1>' + NM + (C.pruefung.hilfsmittel ? '<p class="m">Hilfsmittel: ' + C.pruefung.hilfsmittel + '</p>' : '') + U.map(function (a, k) { return papierAufgabe(a, k + 1, false); }).join(''));
+      if (X) P.push(H('Probetest') + '<h1>' + T + ' – Probetest</h1>' + NM + '<p><b>Zeit:</b> ' + C.pruefung.minuten + ' Minuten' + (C.pruefung.hilfsmittel ? '&emsp;<b>Hilfsmittel:</b> ' + C.pruefung.hilfsmittel : '') + '&emsp;<b>Punkte:</b> <span class="ln" style="min-width:3em"></span> von ' + M + '&emsp;<b>Note:</b> <span class="ln" style="min-width:3em"></span></p>' + X.map(function (a, k) { return papierAufgabe(a, k + 1, false, true); }).join(''));
+    }
+    if (o.l !== 'none' && (U.length || X)) {
+      var L = H('Lösungsblatt') + '<h1>' + T + ' – Lösungsblatt</h1>';
+      if (U.length) L += '<h2>Übungsaufgaben</h2>' + U.map(function (a, k) { return papierAufgabe(a, k + 1, true); }).join('');
+      if (X) L += '<h2>Probetest (' + M + ' Punkte)</h2>' + X.map(function (a, k) { return papierAufgabe(a, k + 1, true, true); }).join('') + '<h2>Notenschlüssel</h2>' + notenTabelle(M);
+      P.push(L);
+    }
+    return P.map(function (x, i) { return '<div' + (i ? ' class="pgb"' : '') + '>' + x + '</div>'; }).join('');
+  }
+  function papierDialog(nurTest) {
+    var d = q('#tvPd'), ids = Object.keys(AUF);
+    q('#tvPd_s').checked = !nurTest; q('#tvPd_p').checked = true;
+    ids.forEach(function (id) { q('#tvPd_n_' + id).value = nurTest ? 0 : (AUF[id].papier != null ? AUF[id].papier : 2); });
+    q('#tvPd_e').textContent = ''; d.showModal();
+  }
+  function papierEinrichten() {
+    var ids = Object.keys(AUF);
+    document.body.insertAdjacentHTML('beforeend',
+      '<dialog id="tvPd" class="tvapp" aria-labelledby="tvPdh"><h2 id="tvPdh">Papierversion drucken</h2><p class="m">Wähle aus, was auf das Papier soll. Im Druckfenster kannst du auch „Als PDF speichern“ wählen.</p>' +
+      '<fieldset><legend>Inhalt</legend><label class="tv-ck"><input type="checkbox" id="tvPd_s" checked>Lernskript</label><label class="tv-ck"><input type="checkbox" id="tvPd_p" checked>Probetest (' + C.pruefung.minuten + ' Minuten, mit Punkten und Notenschlüssel)</label></fieldset>' +
+      '<fieldset><legend>Übungsaufgaben (Anzahl)</legend><div class="pg">' + ids.map(function (id) { return '<label for="tvPd_n_' + id + '">' + AUF[id].name + '</label><input type="number" id="tvPd_n_' + id + '" min="0" max="10" value="2">'; }).join('') + '</div></fieldset>' +
+      '<fieldset><legend>Lösungsblatt</legend><label class="tv-ck"><input type="radio" name="tvPd_l" value="end" checked>am Ende anhängen (eigene Seite)</label><label class="tv-ck"><input type="radio" name="tvPd_l" value="none">ohne Lösung</label><label class="tv-ck"><input type="radio" name="tvPd_l" value="only">nur das Lösungsblatt (Variante eintragen)</label></fieldset>' +
+      '<div class="pg"><label for="tvPd_v">Variante (leer = neue Aufgaben)</label><input type="number" id="tvPd_v" min="1" max="99999" placeholder="neu"></div>' +
+      '<p class="m">Mit derselben Variante und denselben Anzahlen entstehen genau dieselben Aufgaben. So kannst du das Lösungsblatt später nachdrucken.</p><p id="tvPd_e" class="err" aria-live="polite"></p>' +
+      '<div class="bar"><button type="button" class="pri" id="tvPd_go">Drucken / als PDF</button><button type="button" id="tvPd_x">Abbrechen</button></div></dialog><div id="tvPp" class="tvapp"></div>');
+    var b = q('#tvPapier'); if (b) { b.insertAdjacentHTML('afterend', '<span id="tvPi2" class="m" aria-live="polite" style="align-self:center"></span>'); b.onclick = function () { papierDialog(false); }; }
+    q('#tvPd_x').onclick = function () { q('#tvPd').close(); };
+    q('#tvPd_go').onclick = function () {
+      var n = {}, sum = 0;
+      ids.forEach(function (id) { n[id] = Math.max(0, Math.min(10, parseInt(q('#tvPd_n_' + id).value, 10) || 0)); sum += n[id]; });
+      var o = { s: q('#tvPd_s').checked, p: q('#tvPd_p').checked, n: n, l: q('input[name="tvPd_l"]:checked').value, v: parseInt(q('#tvPd_v').value, 10) }, e = q('#tvPd_e'), auf = o.p || sum > 0;
+      if (o.l === 'only' && !(o.v > 0)) { e.textContent = 'Trage die Variante vom Aufgabenblatt ein (oben rechts auf jeder Seite).'; return; }
+      if (o.l === 'only' && !auf) { e.textContent = 'Wähle dieselben Aufgaben wie auf dem Aufgabenblatt.'; return; }
+      if (!o.s && !auf) { e.textContent = 'Wähle mindestens einen Inhalt aus.'; return; }
+      if (!(o.v > 0)) o.v = 1000 + Math.floor(Math.random() * 9000);
+      q('#tvPp').innerHTML = baue(o); q('#tvPd').close();
+      q('#tvPi2') && (q('#tvPi2').textContent = 'Zuletzt gedruckt: Variante ' + o.v);
+      document.body.classList.add('tv-pp'); setTimeout(function () { print(); }, 60);
+    };
+    addEventListener('afterprint', function () { document.body.classList.remove('tv-pp'); });
+  }
+
+  /* Reiter */
+  function reiter() {
+    var secs = qa('#tvApp .tv-sec'), namen = [];
+    secs.forEach(function (s) { var n = s.getAttribute('data-reiter'); if (namen.indexOf(n) < 0) namen.push(n); });
+    var nav = q('#tvTabs'), akt = namen[0];
+    try { var m = sessionStorage.getItem('tv-reiter|' + location.pathname); if (namen.indexOf(m) >= 0) akt = m; } catch (e) { /* ohne Speicher */ }
+    nav.innerHTML = namen.map(function (n) { return '<button type="button" data-t="' + esc(n) + '">' + n + '</button>'; }).join('');
+    function zeige(n) {
+      akt = n; secs.forEach(function (s) { s.hidden = s.getAttribute('data-reiter') !== n; });
+      qa('button', nav).forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-t') === n); });
+      try { sessionStorage.setItem('tv-reiter|' + location.pathname, n); } catch (e) { /* ohne Speicher */ }
+    }
+    qa('button', nav).forEach(function (b) { b.onclick = function () { zeige(b.getAttribute('data-t')); }; });
+    zeige(akt);
+  }
+
+  TV.thema = function (cfg) {
+    C = cfg; AUF = cfg.aufgaben || {};
+    if (!C.pruefung) throw new Error('TV.thema: "pruefung" fehlt.');
+    C.pruefung.aufgaben.forEach(function (z) { if (!AUF[z[0]]) throw new Error('TV.thema: Aufgabe "' + z[0] + '" aus der Prüfung fehlt in "aufgaben".'); });
+    Object.keys(AUF).forEach(function (id) { if (typeof AUF[id].gen !== 'function') throw new Error('TV.thema: Aufgabe "' + id + '" hat kein gen.'); });
+    reiter();
+    qa('#tvApp .tv-uebung').forEach(uebung);
+    pruefung();
+    papierEinrichten();
+  };
+  TV.punkte = punkte; TV.note = note; TV.mitSaat = mitSaat;
+  window.TV = TV;
+})();
+</script>
+<!-- /Testvorbereitung:script -->
+
+<!-- Testvorbereitung:thema -->
+<script>
+/* Thema der Testvorbereitung. Anleitung: Skill Baue-Testvorbereitung, aufgaben.md.
+   Zufall nur über TV.zufall / TV.ganz / TV.wahl / TV.mische (sonst passt das Lösungsblatt nicht zur Variante). */
+TV.thema({
+  titel: 'Thema',
+  aufgaben: {
+    beispiel: {
+      name: 'Beispielaufgabe',
+      papier: 2,
+      gen: function () {
+        var a = TV.ganz(2, 9), b = TV.ganz(2, 9);
+        return {
+          titel: 'Beispiel',
+          frage: 'Berechne das Produkt.',
+          gegeben: a + ' · ' + b,
+          felder: [{ typ: 'zahl', label: 'Ergebnis', loesung: a * b, stellen: 0 }],
+          weg: a + ' · ' + b + ' = ' + (a * b)
+        };
+      }
+    }
+  },
+  pruefung: { minuten: 20, hilfsmittel: 'Taschenrechner', aufgaben: [['beispiel', 3]] }
+});
+</script>
+<!-- /Testvorbereitung:thema -->

@@ -1,0 +1,18 @@
+# Schutzregeln: Wer was ändern darf. Die eine Liste für Werkzeug- und Abteilungsschutz, liest
+# .claude/gemeinsam/scripts/pruefen.py (am Rechner vor dem Commit, auf GitHub vor dem Zustellen). Daraus macht
+# schutz-github.py die Rulesets, mit denen GitHub verbotene Pushes abweist: nach jeder Änderung hier committen,
+# "schutz-github.py --anwenden" (Admin am Repo), dann pushen. Sonst ist der Lauf rot und nichts wird zugestellt.
+# Hier stehen nur Pfade und Teams der Organisation B2-NBG, keine Namen. Wer in einem Team ist, steht bei GitHub.
+# Diese Datei ist selbst Werkzeug: Ändern dürfen sie nur Werkzeug-Verantwortliche (Team werkzeug-verantwortliche).
+# In der Prüfung nach dem Push gilt sie in der Fassung des letzten grünen Laufs, für die Rulesets im letzten Commit.
+# Mehr: .claude/gemeinsam/regeln/einrichtung.md, "Werkzeugschutz und Abteilungsschutz".
+#
+#   Werkzeug | <Muster>          ändern nur Werkzeug-Verantwortliche
+#   Frei     | <Muster>          dürfen alle ändern, auch unter Werkzeug oder in einem zugeordneten Unterrichtsordner
+#   Klasse   | <Kürzel> | <Team> Unterricht/<Klasse>/…: Team der Abteilung
+#   Fach     | <Kürzel> | <Team> Unterricht/<Klasse>/<Fach>/…: Team des Fachbereichs, es gewinnt vor der Abteilung
+#
+# Muster: mit / am Ende ein Ordner samt allem darin, sonst ein Pfad; * steht für beliebige Zeichen, auch über Ordner
+# hinweg (für die Rulesets nur als ganzer Ordnername, wie in Unterricht/*/Vorschau.html). Ohne Zuordnung ist ein Unterrichtsordner für alle frei (GitHub gibt einen Hinweis). Lernfelder haben keinen
+# Fachbereich und gehören der Abteilung. Neue Klasse oder neues Fach: hier eine Zeile ergänzen.
+# Den Notizschutz (ToDo/) prüft pruefen.py am Inhalt, er steht nicht hier.

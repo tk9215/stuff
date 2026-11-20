@@ -1,0 +1,13 @@
+# Fragenkatalog für das Handbuch (#Handbuch.html): Was Kolleg/innen wissen wollen.
+# Eine Frage pro Zeile, nach dem | die id des Abschnitts im Handbuch, der sie beantwortet.
+# handbuch.py baut daraus die Liste "Häufige Fragen" und prüft, dass es jeden Abschnitt gibt.
+# Die Liste ist im Handbuch unsichtbar: Die Fragen findet man nur über die Suche.
+# Neue Fragen von Kolleg/innen hier aufnehmen und den Abschnitt so ergänzen, dass er sie beantwortet.
+# Zeilen mit # werden ignoriert.
+
+Wie erstelle ich Unterrichtsmaterial? | material
+Welche Werkzeuge gibt es? | skills
+Wie halte ich eine offene Aufgabe fest? | notizen
+Wie frage ich nach einem Thema aus den Notizen? | notizen
+Was ist bei einer gewünschten Zustellung zu beachten? | ablage
+Welche Angaben helfen bei einer Fehlermeldung? | hilfe

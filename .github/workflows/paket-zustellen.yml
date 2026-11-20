@@ -1,0 +1,139 @@
+# Optionaler Zustellworkflow. Kein automatischer Start nach einem Push; nur manuell nach ausdrücklichem Wunsch.
+# Von Hand: Actions > "Bauen und zustellen" > Run workflow.
+# Schutz (wer was darf, Freigabe, Zurückhalten, Lauf von Hand): .claude/gemeinsam/regeln/einrichtung.md,
+# "Werkzeugschutz und Abteilungsschutz". Vor dem Start den Zielpfad bestätigen lassen; der Workflow nutzt sein
+# konfiguriertes Ziel und ist nicht für beliebige Zielpfade geeignet.
+name: Bauen und zustellen
+
+on:
+  # Automatische Zustellung nach Push ist absichtlich ausgeschaltet.
+  # Bei Bedarf kann dieser Trigger nach Abstimmung wieder aktiviert werden:
+  # push:
+  #   branches: [main]
+  workflow_dispatch:
+    inputs:
+      was:
+        description: 'Was, mehrere durch Leerzeichen getrennt: Themenordner (Unterricht/<Klasse>/<Fach>/<Abschnitt>/<Thema>), Test-Ordner (Unterricht/…/Test-<Thema>), Kurs (Name wie Kurs-ALLE10-PuG), Kurse, Handbuch, oder: alle'
+        required: true
+        type: string
+      probe:
+        description: 'Probe: unter Pakete/_Pilot/, Kurse/_Pilot/ oder Tests/_Pilot/ ablegen (nichts in der ByCS wird berührt)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: paket-zustellen
+  cancel-in-progress: false
+
+jobs:
+  zustellen:
+    runs-on: ubuntu-latest
+    environment: zustellung
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Seit wann? (letzter grüner Lauf nach einem Push)
+        if: github.event_name == 'push'
+        id: basis
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VORHER: ${{ github.event.before }}
+        run: |
+          basis=$(gh run list --workflow paket-zustellen.yml --branch main --event push --status success --limit 1 --json headSha --jq '.[0].headSha' 2>/dev/null || true)
+          if [ -z "$basis" ] || ! git cat-file -e "$basis^{commit}" 2>/dev/null; then basis="$VORHER"; fi
+          echo "Verglichen wird mit $basis"
+          echo "seit=$basis" >> "$GITHUB_OUTPUT"
+          # Pushes seit dem letzten grünen Lauf, älteste zuerst: "<Commit>:<wer gepusht hat>" (für den Schutz in pruefen.py)
+          pushes=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/paket-zustellen.yml/runs?branch=main&event=push&per_page=100" --jq '[.workflow_runs[] | select(.run_number < '"$GITHUB_RUN_NUMBER"')] | (map(.conclusion) | index("success")) as $i | .[0:($i // length)] | reverse | map(.head_sha + ":" + .actor.login) | join(" ")' 2>/dev/null || true)
+          echo "Frühere Pushes seit dem letzten grünen Lauf: ${pushes:-keine}"
+          echo "pushes=$pushes" >> "$GITHUB_OUTPUT"
+
+      # Zugang zum Lesen der Teams. Scheitert er (Secrets fehlen, App entfernt), meldet pruefen.py den Fehler verständlich.
+      - name: Zugang zu den Teams (GitHub-App)
+        id: teams
+        continue-on-error: true
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.TEAM_APP_ID }}
+          private-key: ${{ secrets.TEAM_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      # Sperrt GitHub, was laut schutz.txt gesperrt sein soll? Sonst nichts zustellen (auch ohne Zugang: rot).
+      - name: Rulesets passen zu schutz.txt?
+        env:
+          SCHUTZ_TOKEN: ${{ github.token }}
+        run: python3 .claude/gemeinsam/scripts/schutz-github.py --pruefen
+
+      - name: Von Hand nur für Werkzeug-Verantwortliche
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TEAM_TOKEN: ${{ steps.teams.outputs.token }}
+        run: python3 .claude/gemeinsam/scripts/pruefen.py --von-hand
+
+      - name: Prüfen, Handbuch und Vorschau erneuern
+        if: github.event_name == 'push'
+        env:
+          TEAM_TOKEN: ${{ steps.teams.outputs.token }}
+          BYCS_PUSHES: ${{ steps.basis.outputs.pushes }}
+        run: python3 .claude/gemeinsam/scripts/pruefen.py --seit "${{ steps.basis.outputs.seit }}" --erneuern --zurueckhalten "$RUNNER_TEMP/zurueckgehalten.txt"
+
+      - name: Erneuertes committen
+        if: github.event_name == 'push'
+        env:
+          SEIT: ${{ steps.basis.outputs.seit }}
+          TEAM_TOKEN: ${{ steps.teams.outputs.token }}
+          BYCS_PUSHES: ${{ steps.basis.outputs.pushes }}
+        run: |
+          vormerken() { git add -A -- '#Handbuch.html' ':(glob)Unterricht/**/Vorschau.html'; }
+          vormerken
+          if git diff --cached --quiet; then echo "Nichts zu committen."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qm "Automatisch: Handbuch und Vorschau erneuert [intern]"
+          for i in 1 2 3; do
+            if git pull --rebase --quiet origin main && git push --quiet origin HEAD:main; then exit 0; fi
+            # Jemand hat inzwischen gepusht: auf den neuen Stand setzen, neu prüfen und neu erzeugen
+            git rebase --abort 2>/dev/null || true
+            git reset --quiet --hard origin/main
+            python3 .claude/gemeinsam/scripts/pruefen.py --seit "$SEIT" --erneuern --zurueckhalten "$RUNNER_TEMP/zurueckgehalten.txt" || exit 1
+            vormerken
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -qm "Automatisch: Handbuch und Vorschau erneuert [intern]"
+          done
+          echo "::error::Handbuch und Vorschau konnten nicht nach main gepusht werden (viele gleichzeitige Änderungen). Lauf wiederholen (Re-run jobs)."
+          exit 1
+
+      - name: Bauen und zustellen
+        env:
+          FLOW_URL: ${{ secrets.FLOW_URL }}
+          FLOW_SCHLUESSEL: ${{ secrets.FLOW_SCHLUESSEL }}
+          BYCS_LINKSEITE: ${{ secrets.BYCS_LINKSEITE }}
+          WAS: ${{ inputs.was }}
+          PROBE: ${{ inputs.probe }}
+          SEIT: ${{ steps.basis.outputs.seit }}
+        run: |
+          set -f
+          skript=.claude/skills/Baue-Lernpaket/scripts/paket-zustellen.py
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            python3 "$skript" --seit "$SEIT" --ohne "$RUNNER_TEMP/zurueckgehalten.txt"
+          else
+            if [ "$PROBE" = "true" ]; then probe=--probe; else probe=; fi
+            python3 "$skript" $probe $WAS
+          fi
+
+      - name: Zurückgehalten?
+        if: github.event_name == 'push'
+        run: |
+          datei="$RUNNER_TEMP/zurueckgehalten.txt"
+          if [ -s "$datei" ]; then
+            echo "::error::Zurückgehalten, nicht zugestellt: $(tr '\n' ' ' < "$datei")(siehe Fehler im Schritt Prüfen). Alles andere ist zugestellt. Freigeben: ein Mitglied des genannten Teams oder Werkzeug-Verantwortliche sehen die Änderung an und wiederholen den Lauf (Re-run jobs), oder die Änderung wird zurückgenommen."
+            exit 1
+          fi
+          echo "Nichts zurückgehalten."

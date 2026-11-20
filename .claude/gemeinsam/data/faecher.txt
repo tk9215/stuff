@@ -1,0 +1,7 @@
+# Fächer und Lernfelder für Ablageort, Paketnamen, Schriftfeld und Handbuch:
+#   Kürzel | voller Name | Klassen (optional, mit Komma)
+# Das Kürzel ist der Ordner- und Dateiname (Unterricht/<Klasse>/<Kürzel>/..., nur Buchstaben und Ziffern, höchstens 8 Zeichen),
+# der volle Name steht im Schriftfeld und im Handbuch. Lernfelder heißen LF<Nummer>. Weil dieselbe Nummer in jedem Beruf
+# etwas anderes bedeutet, steht dahinter die Klasse (z. B. MGF10); Fächer ohne Klasse gelten für alle.
+# Das zuletzt verwendete steht oben (Reihenfolge im Auswahldialog). Ein neues Fach (unter "Other" eingetippt) wird oben
+# eingefügt, ein gewähltes wandert nach oben. Zeilen mit # werden ignoriert. Liest unterrichtsmaterial.py (.claude/gemeinsam/scripts).

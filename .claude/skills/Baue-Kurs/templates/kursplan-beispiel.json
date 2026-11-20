@@ -1,0 +1,31 @@
+{
+  "kurs": {
+    "vollname": "BEISPIEL Kursname SJ 2026/2027",
+    "kurzname": "BEISPIEL 26/27",
+    "startdatum": "2026-09-15",
+    "banner": "Ressourcen/Bilder/BEISPIEL/BEISPIEL-Banner-ByCS.png",
+    "zusammenfassung": "<p>Kurze Beschreibung des Kurses.</p>"
+  },
+  "allgemein_zusammenfassung": "<div style=\"background-color:#1B2A4A;color:#F7F4EC;padding:18px 22px;border-bottom:6px solid #F2A33A;\"><p style=\"margin:0;color:#F2A33A;font-weight:700;\">AUGENBRAUE</p><p style=\"margin:4px 0 0;font-size:24px;font-weight:800;\">Titel</p></div>",
+  "allgemein": [
+    {"datei": "Unterricht/MGF10/LF1/BW1/Kursinfo/index.html", "dateiname": "Kursinfo.html", "titel": "Kursinfo und Ablauf"},
+    {"datei": "Unterricht/MGF10/LF1/BW1/Thema-Unterrichtsplan/index.html", "dateiname": "Unterrichtsentwurf.html", "titel": "Unterrichtsentwurf (nur für Lehrkräfte)", "versteckt": true, "beschreibung": "<p>Für Schülerinnen und Schüler verborgen.</p>"}
+  ],
+  "abschnitte": [
+    {
+      "name": "BW1-Thema der ersten Blockwoche",
+      "zusammenfassung": "<p>Abschnittstext mit Inline-Stilen.</p>",
+      "dateien": [
+        {"datei": "Unterricht/MGF10/LF1/BW1/Thema-Arbeitsblatt/Arbeitsblatt-BW1.pdf", "titel": "Arbeitsblatt BW1"},
+        {"typ": "scorm", "datei": "BYCS-SYNC/Pakete/MGF10/LF1/MGF10_LF1_BW1_Kapitel-1_scorm.zip", "titel": "E-Learning BW1", "abschluss": "abgeschlossen"}
+      ]
+    },
+    {
+      "name": "BW2-Thema der zweiten Blockwoche",
+      "dateien": [
+        {"typ": "scorm", "datei": "BYCS-SYNC/Pakete/MGF10/LF1/MGF10_LF1_BW2_Kapitel-2_scorm.zip", "link": "linkseite", "titel": "E-Learning BW2", "beschreibung": "<p>Öffnet sich in einem neuen Fenster. Wenn alles fertig ist, klickst du einmal auf „Abgeben“.</p>", "abschluss": "bestanden", "voraussetzung": "E-Learning BW1"},
+        {"typ": "test", "datei": "Unterricht/MGF10/LF1/BW2/Test-Thema/Test-Thema.mbz", "beschreibung": "<p>12 Fragen, 20 Minuten, ein Versuch.</p>", "voraussetzung": "E-Learning BW2"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="de" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz-Vorschau</title>
+<!--
+  Quiz-Vorschau für Moodle-XML (Skill ByCS-Fragenersteller). Nur für Lehrkräfte, kein Schülermaterial.
+  - Diese Datei per Doppelklick öffnen und eine beliebige Moodle-XML hineinziehen (allgemeiner Viewer).
+  - quiz-vorschau.py kopiert sie als Vorschau.html neben eine Quiz-XML und bettet die XML in #quizdaten ein (Base64).
+    Vorschau.html nie von Hand ändern: Änderungen gehören in diese Vorlage, dann quiz-vorschau.py --alle.
+  - Schülersicht: Fragen beantworten, "Prüfen" zeigt Rückmeldung und Punkte (wie ein Test mit sofortiger Rückmeldung).
+  - Review-Sicht: alle Lösungen, Punkte, Rückmeldungen und Hinweise auf typische Fehler.
+  - Offline, keine externen Ressourcen. Aussehen angelehnt an Moodle 4 (ByCS Lernplattform).
+-->
+<style>
+:root{
+  --bg:#ffffff; --ink:#1d2125; --ink2:#5c6670; --line:#dee2e6; --panel:#f8f9fa; --nav:#ffffff;
+  --brand:#1d3a5f; --primary:#0f6cbf; --primaryInk:#ffffff;
+  --form:#e7f3f5; --formInk:#001a1e; --out:#fcefdc; --outInk:#7d5a29;
+  --ok:#357a32; --okSoft:#d7e4d6; --bad:#ca3120; --badSoft:#f4d6d2; --part:#c37c00; --partSoft:#fbe7c6;
+  --warn:#8a6100; --warnSoft:#fff3cd; --mark:#fff2a8; --field:#ffffff;
+}
+:root[data-theme="dark"]{
+  --bg:#16181b; --ink:#e6e8ea; --ink2:#a5adb6; --line:#3a4048; --panel:#20242a; --nav:#1c1f24;
+  --brand:#0f2238; --primary:#5aa7e6; --primaryInk:#0b1520;
+  --form:#163038; --formInk:#dcedf1; --out:#3a2f1e; --outInk:#f3d9b1;
+  --ok:#7bc27a; --okSoft:#203a24; --bad:#f08a7c; --badSoft:#45221d; --part:#f0b45a; --partSoft:#43341a;
+  --warn:#f3cf6b; --warnSoft:#3b3317; --mark:#5a4d12; --field:#111316;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--primary)}
+button,select,input,textarea{font:inherit;color:inherit}
+.navbar{display:flex;align-items:center;gap:12px;padding:8px 16px;background:var(--nav);border-bottom:1px solid var(--line);box-shadow:0 2px 4px rgba(0,0,0,.08)}
+.brand{background:var(--brand);color:#fff;font-weight:700;padding:4px 10px;border-radius:4px;letter-spacing:.02em;white-space:nowrap}
+.navbar .was{color:var(--ink2);font-size:13px}
+.wrap{max-width:1240px;margin:0 auto;padding:16px}
+.pagehead h1{font-size:1.6rem;margin:4px 0 2px;font-weight:600}
+.pagehead .sub{color:var(--ink2);font-size:13px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:14px 0 18px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.seg{display:inline-flex;border:1px solid var(--primary);border-radius:5px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:5px 12px;cursor:pointer;color:var(--primary)}
+.seg button[aria-pressed="true"]{background:var(--primary);color:var(--primaryInk)}
+.btn{display:inline-block;border:1px solid var(--line);background:var(--panel);padding:5px 12px;border-radius:5px;cursor:pointer;text-decoration:none;color:var(--ink)}
+.btn:hover{filter:brightness(.96)}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:var(--primaryInk)}
+.btn-secondary{background:#ced4da;border-color:#ced4da;color:#1d2125}
+:root[data-theme="dark"] .btn-secondary{background:#495057;border-color:#495057;color:#f1f3f5}
+.toolbar label{display:inline-flex;gap:6px;align-items:center}
+.toolbar select{padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--field);max-width:320px}
+.ml-auto{margin-left:auto}
+#fehler{background:var(--badSoft);color:var(--bad);border:2px solid var(--bad);padding:12px 14px;border-radius:6px;margin:12px 0;white-space:pre-wrap;font-weight:600}
+#start{border:3px dashed var(--line);border-radius:10px;padding:48px 20px;text-align:center;margin:20px 0;background:var(--panel)}
+#start.ueber,body.ueber #start{border-color:var(--primary);background:var(--form)}
+#start h2{margin:0 0 8px}
+#start p{color:var(--ink2);margin:6px 0 18px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:24px;align-items:start}
+aside.block{position:sticky;top:12px;border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--bg)}
+aside.block h3{font-size:1rem;margin:0 0 10px}
+.qn{display:flex;flex-wrap:wrap;gap:6px}
+.qnbutton{display:inline-flex;flex-direction:column;align-items:center;justify-content:flex-start;width:30px;height:40px;border:1px solid #8f959e;border-radius:3px;text-decoration:none;color:var(--ink);font-size:13px;background:var(--field);overflow:hidden}
+.qnbutton span{display:block;width:100%;text-align:center;line-height:22px}
+.qnbutton i{display:block;width:100%;flex:1;background:var(--field)}
+.qnbutton.answered i{background:#8f959e}
+.qnbutton.correct i{background:var(--ok)}
+.qnbutton.partiallycorrect i{background:var(--part)}
+.qnbutton.incorrect i{background:var(--bad)}
+.qnbutton.pending i{background:var(--primary)}
+.qnbutton.haswarn i{background:var(--warn)}
+.qnbutton.info{border-style:dashed}
+.navsum{margin-top:12px;font-size:13px;color:var(--ink2)}
+.navsum b{color:var(--ink)}
+.navbtns{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+h2.kat{font-size:1.15rem;font-weight:600;margin:26px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+h2.kat small{color:var(--ink2);font-weight:400;font-size:13px}
+.que{display:flex;gap:14px;margin:0 0 26px;scroll-margin-top:12px}
+.que .info{flex:0 0 9.5em;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:8px;font-size:13px;align-self:flex-start}
+.que .info h3.no{font-size:13px;font-weight:400;margin:0 0 6px}
+.que .info .qno{font-size:1.4em;font-weight:700}
+.que .info .state,.que .info .grade{margin-bottom:6px}
+.que .info .qname{color:var(--ink2);font-size:12px;hyphens:auto;overflow-wrap:break-word;border-top:1px solid var(--line);padding-top:6px}
+.que .info .typ{color:var(--ink2);font-size:12px}
+.que .content{flex:1;min-width:0}
+.formulation{background:var(--form);color:var(--formInk);border-radius:6px;padding:14px 16px;overflow-wrap:break-word}
+.formulation .qtext{margin-bottom:12px}
+.formulation .qtext p:first-child{margin-top:0}
+.formulation img{max-width:100%;height:auto}
+.prompt{margin:8px 0 6px}
+.answer .r{padding:3px 6px;border-radius:4px;margin:2px 0;display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px}
+.answer .r label{display:flex;gap:6px;align-items:flex-start;cursor:pointer;flex:1;min-width:0}
+.answer .r input{margin-top:4px;flex:0 0 auto}
+.answer .r .answernumber{font-weight:400;flex:0 0 auto}
+.r.correct{background:var(--okSoft)}
+.r.incorrect{background:var(--badSoft)}
+.r.partiallycorrect{background:var(--partSoft)}
+.specificfeedback:empty{display:none}
+.specificfeedback{flex-basis:100%;background:var(--out);color:var(--outInk);padding:4px 8px;border-radius:4px;margin:2px 0 2px 24px;font-size:14px}
+.mark{font-weight:700;margin:0 4px}
+.mark.correct{color:var(--ok)} .mark.incorrect{color:var(--bad)} .mark.partiallycorrect{color:var(--part)}
+input[type=text],select,textarea{background:var(--field);border:1px solid #8f959e;border-radius:4px;padding:4px 6px}
+:root[data-theme="dark"] input[type=text],:root[data-theme="dark"] select,:root[data-theme="dark"] textarea{border-color:#6c757d}
+textarea{width:100%;min-height:9em}
+.correct-f{border:2px solid var(--ok)!important;background:var(--okSoft)!important}
+.incorrect-f{border:2px solid var(--bad)!important;background:var(--badSoft)!important}
+.partiallycorrect-f{border:2px solid var(--part)!important;background:var(--partSoft)!important}
+table.answer{border-collapse:collapse}
+table.answer td{padding:6px 10px 6px 0;vertical-align:middle}
+table.answer td.text{padding-right:16px}
+.drop{display:inline-block;min-width:8em;min-height:1.7em;padding:1px 8px;border:1px dashed #6c757d;border-radius:4px;background:var(--field);vertical-align:middle;cursor:pointer;text-align:center}
+.drop.filled{border-style:solid}
+.drop.ziel{outline:3px solid var(--primary)}
+.draghome{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:10px;border-top:1px dashed #9fb7bd}
+.drag{display:inline-block;padding:2px 10px;border:1px solid #6c757d;border-radius:4px;cursor:grab;user-select:none;color:#1d2125}
+.drag.used{visibility:hidden}
+.drag.gewaehlt{outline:3px solid var(--primary)}
+.g1{background:#ffffff}.g2{background:#b0c4de}.g3{background:#dcdcdc}.g4{background:#d8bfd8}.g5{background:#87cefa}.g6{background:#daa520}.g7{background:#ffd700}.g8{background:#f0e68c}
+.drop.g1,.drop.g2,.drop.g3,.drop.g4,.drop.g5,.drop.g6,.drop.g7,.drop.g8{color:#1d2125}
+.locked .drag,.locked .drop{cursor:default}
+.cl{display:inline}
+.cl.v label{display:block}
+.cl.h label{margin-right:10px}
+.cfb{display:inline-block;background:var(--out);color:var(--outInk);font-size:13px;padding:1px 6px;border-radius:4px;margin:0 4px}
+.outcome{background:var(--out);color:var(--outInk);border-radius:6px;padding:12px 16px;margin-top:8px}
+.outcome>div+div{margin-top:8px}
+.generalfeedback{border-top:1px solid rgba(125,90,41,.3);padding-top:8px}
+.rightanswer{font-weight:600}
+.im-controls{margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.validationerror{color:var(--bad);font-weight:600}
+.hinweis{background:var(--warnSoft);color:var(--warn);border-left:4px solid var(--warn);padding:8px 12px;border-radius:4px;margin-top:8px}
+.summary{border:1px solid var(--line);border-radius:6px;padding:12px 16px;background:var(--panel);margin:10px 0 30px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+/* Review-Sicht */
+.rv-summary{border:1px solid var(--line);border-radius:6px;padding:14px 16px;background:var(--panel);margin-bottom:10px}
+.rv-summary h2{margin:0 0 8px;font-size:1.15rem}
+.kpis{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 12px}
+.kpi b{font-size:1.3em;display:block}
+table.rv{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px;background:var(--bg);color:var(--ink)}
+table.rv th,table.rv td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+table.rv th{background:var(--panel);font-weight:600}
+table.rv tr.ok td:first-child{border-left:5px solid var(--ok)}
+table.rv tr.teil td:first-child{border-left:5px solid var(--part)}
+table.rv tr.nein td:first-child{border-left:5px solid var(--bad)}
+table.rv td.pz{white-space:nowrap;text-align:right}
+.meta{font-size:13px;color:var(--formInk);opacity:.85;margin-top:6px}
+mark.gapok{background:var(--mark);color:inherit;padding:0 4px;border-radius:3px;border-bottom:2px solid var(--ok);font-weight:600}
+mark.gapbad{background:var(--badSoft);color:var(--bad);padding:0 4px;border-radius:3px}
+dl.fbk{margin:10px 0 0;display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;font-size:14px}
+dl.fbk dt{font-weight:600}
+dl.fbk dd{margin:0}
+.leer{color:var(--ink2);font-style:italic}
+ul.warnliste{margin:8px 0 0;padding-left:20px}
+.ok-text{color:var(--ok);font-weight:600}
+.que.review.haswarn .info{border-color:var(--warn);border-width:2px}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .toolbar label{max-width:100%;min-width:0}
+  .toolbar select{min-width:0;max-width:100%;flex:1}
+  aside.block{position:static;order:-1}
+}
+@media (max-width:600px){
+  .wrap{padding:12px 16px}
+  .que{flex-direction:column;gap:6px}
+  .que .info{flex:none;width:100%;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
+  .que .info>*{margin:0!important;border:0!important;padding:0!important}
+  .navbar .was{display:none}
+  table.answer,table.answer tbody{display:block;width:100%}
+  table.answer td{display:block;padding:2px 0}
+  table.answer tr{display:block;margin-bottom:8px}
+  table.answer select,.formulation select{max-width:100%}
+  table.rv{table-layout:fixed;overflow-wrap:break-word}
+  .formulation{padding:12px}
+}
+@media print{
+  .navbar,.toolbar,aside.block,.im-controls,.summary button,#start{display:none!important}
+  .layout{display:block}
+  body{background:#fff;color:#000;font-size:12px}
+  .que{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="navbar"><span class="brand">ByCS Lernplattform</span><span class="was">Quiz-Vorschau ohne Upload (Moodle-XML, nur für Lehrkräfte)</span></div>
+<div class="wrap">
+  <div id="fehler" hidden></div>
+  <div id="start">
+    <h2>Moodle-XML ansehen</h2>
+    <p>Quiz-Datei (.xml) hierher ziehen oder auswählen. Die Datei bleibt auf diesem Rechner, nichts wird hochgeladen.</p>
+    <label class="btn btn-primary">XML-Datei auswählen<input type="file" id="datei1" accept=".xml,text/xml,application/xml" hidden></label>
+  </div>
+  <div id="app" hidden>
+    <div class="pagehead"><h1 id="titel">Quiz</h1><div class="sub" id="untertitel"></div></div>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Ansicht">
+        <button type="button" data-ansicht="schueler" aria-pressed="true">Schülersicht</button>
+        <button type="button" data-ansicht="review" aria-pressed="false">Review-Sicht</button>
+      </div>
+      <label>Kategorie <select id="katwahl"></select></label>
+      <label id="mischwahl"><input type="checkbox" id="mischen" checked> Antworten mischen</label>
+      <span class="ml-auto"></span>
+      <label class="btn">Andere XML öffnen<input type="file" id="datei2" accept=".xml,text/xml,application/xml" hidden></label>
+      <button type="button" class="btn" id="tglTheme">Hell / Dunkel</button>
+    </div>
+    <div class="layout">
+      <main id="fragen"></main>
+      <aside class="block" id="navblock">
+        <h3>Test-Navigation</h3>
+        <div class="qn" id="qn"></div>
+        <div class="navsum" id="navsum"></div>
+        <div class="navbtns" id="navbtns"></div>
+      </aside>
+    </div>
+  </div>
+</div>
+<script type="text/plain" id="quizdaten" data-datei=""></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, el) { return (el || document).querySelector(s); };
+  var $$ = function (s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmt(x) { return (Math.round(x * 100) / 100).toFixed(2).replace('.', ','); }
+  function proz(f) { return String(Math.round(f * 1000) / 1000).replace('.', ',') + ' %'; }
+  function fehler(msg) { var b = $('#fehler'); b.textContent = msg; b.hidden = false; }
+  window.addEventListener('error', function (e) { fehler('Fehler in der Vorschau: ' + e.message + (e.lineno ? ' (Zeile ' + e.lineno + ')' : '')); });
+
+  var LS = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+             set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ohne Speicher */ } } };
+  var S = { quiz: null, datei: '', ansicht: LS.get('quiz-vorschau-ansicht') === 'review' ? 'review' : 'schueler', kat: '', mischen: true, gewaehlt: null, quelle: null };
+  var LEER = 'Bitte beantworten Sie die Frage.';
+  var TYPNAME = { multichoice: 'Multiple-Choice', truefalse: 'Wahr/Falsch', shortanswer: 'Kurzantwort', numerical: 'Numerisch',
+    matching: 'Zuordnung', gapselect: 'Lückentextauswahl', ddwtos: 'Drag-and-Drop auf Text', multianswer: 'Lückentext (Cloze)',
+    essay: 'Freitext', aitext: 'Freitext (KI-Feedback)', description: 'Beschreibung' };
+
+  /* ---------- Zahlen und Text ---------- */
+  function zahl(s) {
+    var m = String(s == null ? '' : s).trim().match(/^([-+]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:e[-+]?\d+)?)\s*[^\d\s]*$/i);
+    return m ? parseFloat(m[1].replace(',', '.')) : null;
+  }
+  function htmlText(h) { var d = new DOMParser().parseFromString('<body>' + h + '</body>', 'text/html'); return d.body.textContent; }
+  function clean(h) {
+    var d = new DOMParser().parseFromString('<body>' + h + '</body>', 'text/html');
+    $$('script,iframe,object,embed,link,meta,style,base,form', d).forEach(function (n) { n.remove(); });
+    $$('*', d.body).forEach(function (n) {
+      Array.prototype.slice.call(n.attributes).forEach(function (a) {
+        if (/^on/i.test(a.name) || (/^(href|src|action)$/i.test(a.name) && /^\s*javascript:/i.test(a.value))) n.removeAttribute(a.name);
+      });
+    });
+    $$('a[href]', d.body).forEach(function (a) { a.target = '_blank'; a.rel = 'noopener'; });
+    return d.body.innerHTML;
+  }
+  function mische(arr, an) {
+    var a = arr.slice();
+    if (an && S.mischen) for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  function roem(n) { var r = '', z = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]; z.forEach(function (p) { while (n >= p[0]) { r += p[1]; n -= p[0]; } }); return r; }
+  function nummer(i, art) {
+    switch (art) { case 'ABCD': return String.fromCharCode(65 + i) + '. '; case '123': return (i + 1) + '. ';
+      case 'iii': return roem(i + 1).toLowerCase() + '. '; case 'IIII': return roem(i + 1) + '. '; case 'none': return '';
+      default: return String.fromCharCode(97 + (i % 26)) + '. '; }
+  }
+  function kl(s) { return s >= 0.99999 ? 'correct' : s > 0 ? 'partiallycorrect' : 'incorrect'; }
+  function zeichen(el, c) { if (!el) return; el.className = 'mark ' + c; el.textContent = c === 'incorrect' ? '\u2717' : '\u2713'; }
+
+  /* ---------- XML lesen ---------- */
+  function kid(el, tag) { if (!el) return null; for (var i = 0; i < el.children.length; i++) if (el.children[i].tagName === tag) return el.children[i]; return null; }
+  function kids(el, tag) { return el ? Array.prototype.filter.call(el.children, function (c) { return c.tagName === tag; }) : []; }
+  function txt(el, tag) { var k = kid(el, tag); return k ? k.textContent.trim() : ''; }
+  var MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml', webp: 'image/webp' };
+  function roh(el) {
+    if (!el) return '';
+    var t = kid(el, 'text'), s = t ? t.textContent : '', f = el.getAttribute('format') || 'html';
+    if (f !== 'html' && !/<[a-z][\s\S]*>/i.test(s)) s = esc(s).replace(/\n/g, '<br>');
+    kids(el, 'file').forEach(function (d) {
+      var n = d.getAttribute('name') || '', ext = n.split('.').pop().toLowerCase();
+      var url = 'data:' + (MIME[ext] || 'application/octet-stream') + ';base64,' + d.textContent.replace(/\s+/g, '');
+      s = s.split('@@PLUGINFILE@@/' + encodeURI(n)).join(url).split('@@PLUGINFILE@@/' + n).join(url);
+    });
+    return s.trim();
+  }
+  function rich(el) { return clean(roh(el)); }
+  function antworten(q) {
+    return kids(q, 'answer').map(function (a) {
+      var fr = parseFloat(a.getAttribute('fraction')); var tol = parseFloat(txt(a, 'tolerance'));
+      return { t: rich(a), raw: txt(a, 'text'), f: isNaN(fr) ? 0 : fr, fb: rich(kid(a, 'feedback')), tol: isNaN(tol) ? 0 : Math.abs(tol) };
+    });
+  }
+  function bester(ans) { var b = null; ans.forEach(function (a) { if (a.raw !== '*' && (!b || a.f > b.f)) b = a; }); return b; }
+
+  var CLOZE = { SHORTANSWER: 'sa', SA: 'sa', MW: 'sa', SHORTANSWER_C: 'sac', SAC: 'sac', MWC: 'sac', NUMERICAL: 'nm', NM: 'nm',
+    MULTICHOICE: 'mc', MC: 'mc', MULTICHOICE_S: 'mc', MCS: 'mc', MULTICHOICE_V: 'mcv', MCV: 'mcv', MULTICHOICE_VS: 'mcv', MCVS: 'mcv',
+    MULTICHOICE_H: 'mch', MCH: 'mch', MULTICHOICE_HS: 'mch', MCHS: 'mch', MULTIRESPONSE: 'mr', MR: 'mr', MULTIRESPONSE_S: 'mr', MRS: 'mr',
+    MULTIRESPONSE_H: 'mrh', MRH: 'mrh', MULTIRESPONSE_HS: 'mrh', MRHS: 'mrh' };
+  var CLOZENAME = { sa: 'Kurzantwort', sac: 'Kurzantwort (Groß/klein)', nm: 'Numerisch', mc: 'Auswahlliste', mcv: 'Auswahl senkrecht', mch: 'Auswahl waagrecht', mr: 'Mehrfachauswahl', mrh: 'Mehrfachauswahl waagrecht' };
+  function ungeschuetzt(s, ch) { for (var i = 0; i < s.length; i++) { if (s[i] === '\\') { i++; continue; } if (s[i] === ch) return i; } return -1; }
+  function entschuetze(s) { return s.replace(/\\([~}{#\/"\\=%:*])/g, '$1'); }
+  function clozeTeile(body, typ) {
+    var teile = [], cur = '';
+    for (var k = 0; k < body.length; k++) {
+      var c = body[k];
+      if (c === '\\' && k + 1 < body.length) { cur += c + body[k + 1]; k++; continue; }
+      if (c === '~') { teile.push(cur); cur = ''; continue; }
+      cur += c;
+    }
+    teile.push(cur);
+    return teile.map(function (p) {
+      var f = 0, m, fb = '', tol = 0;
+      if (p.charAt(0) === '=') { f = 100; p = p.slice(1); } else if ((m = p.match(/^%(-?\d+(?:\.\d+)?)%/))) { f = parseFloat(m[1]); p = p.slice(m[0].length); }
+      var h = ungeschuetzt(p, '#'); if (h >= 0) { fb = p.slice(h + 1); p = p.slice(0, h); }
+      if (typ === 'nm') { var c2 = ungeschuetzt(p, ':'); if (c2 >= 0) { tol = Math.abs(zahl(p.slice(c2 + 1)) || 0); p = p.slice(0, c2); } }
+      return { t: clean(entschuetze(p).trim()), raw: htmlText(entschuetze(p)).trim(), f: f, fb: clean(entschuetze(fb).trim()), tol: tol };
+    });
+  }
+  function parseCloze(o) {
+    var s = o.html, re = /\{(\d*):([A-Za-z_]+):/g, m, last = 0, out = '', loes = '', subs = [];
+    while ((m = re.exec(s))) {
+      var name = m[2].toUpperCase(), typ = CLOZE[name];
+      if (!typ) { o.warn.push('Unbekannter Lückentyp "' + m[2] + '" im Lückentext.'); continue; }
+      var j = re.lastIndex; while (j < s.length && !(s[j] === '}' && s[j - 1] !== '\\')) j++;
+      if (j >= s.length) { o.warn.push('Lücke ohne schließende Klammer "}" bei: ' + htmlText(s.slice(m.index, m.index + 50))); break; }
+      var sub = { typ: typ, w: m[1] === '' ? 1 : parseInt(m[1], 10), mischen: /S$/.test(name), answers: clozeTeile(s.slice(re.lastIndex, j), typ) };
+      var mehrfach = /^mr/.test(typ), richtig = sub.answers.filter(function (a) { return mehrfach ? a.f > 0 : a.f >= 100; });
+      var summe = richtig.reduce(function (x, a) { return x + a.f; }, 0);
+      if (mehrfach ? Math.abs(summe - 100) > 1 : !richtig.length)
+        o.warn.push('Lücke ' + (subs.length + 1) + (mehrfach ? ': Die richtigen Antworten ergeben zusammen ' + proz(summe) + ' statt 100 %.' : ' hat keine Antwort mit 100 % ("=" fehlt).'));
+      var anzeige = richtig.map(function (a) { return typ === 'nm' && a.tol ? a.raw + ' \u00b1 ' + a.tol : a.raw; }).join(' | ') || '?';
+      out += s.slice(last, m.index) + '<span data-cloze="' + subs.length + '"></span>';
+      loes += s.slice(last, m.index) + '<mark class="' + (richtig.length ? 'gapok' : 'gapbad') + '" title="Lücke ' + (subs.length + 1) + '">' + esc(anzeige) + '</mark>';
+      subs.push(sub); last = j + 1; re.lastIndex = j + 1;
+    }
+    o.html = clean(out + s.slice(last)); o.loesung = clean(loes + s.slice(last));
+    if (!subs.length) o.warn.push('Im Lückentext wurde keine Lücke {1:TYP:...} gefunden.');
+    o.cloze = subs; o.grade = subs.reduce(function (a, b) { return a + b.w; }, 0);
+  }
+  function parseLuecken(o) {
+    var s = o.html, gaps = [];
+    o.html = clean(s.replace(/\[\[(\d+)\]\]/g, function (_, n) { gaps.push(+n); return '<span data-gap="' + n + '"></span>'; }));
+    o.loesung = clean(s.replace(/\[\[(\d+)\]\]/g, function (_, n) {
+      var op = o.opts[n - 1]; return op ? '<mark class="gapok">' + esc(op.t) + '</mark>' : '<mark class="gapbad">[[' + n + ']] ?</mark>';
+    }));
+    o.gaps = gaps;
+    if (!gaps.length) o.warn.push('Im Fragetext gibt es keine Lücke [[1]].');
+    gaps.forEach(function (n) { if (!o.opts[n - 1]) o.warn.push('Zu Lücke [[' + n + ']] gibt es keine Option Nr. ' + n + '.'); });
+  }
+
+  function parseFrage(q, typ, kat) {
+    var o = { typ: typ, kat: kat, name: txt(kid(q, 'name'), 'text'), html: roh(kid(q, 'questiontext')), general: rich(kid(q, 'generalfeedback')),
+      grade: parseFloat(txt(q, 'defaultgrade')), mischen: /^(1|true)$/i.test(txt(q, 'shuffleanswers')),
+      cf: rich(kid(q, 'correctfeedback')), pf: rich(kid(q, 'partiallycorrectfeedback')), nf: rich(kid(q, 'incorrectfeedback')),
+      shownum: !!kid(q, 'shownumcorrect'), warn: [] };
+    if (isNaN(o.grade)) o.grade = 1;
+    switch (typ) {
+      case 'multichoice': o.single = !/^(false|0)$/i.test(txt(q, 'single')); o.numbering = txt(q, 'answernumbering') || 'abc'; o.answers = antworten(q); break;
+      case 'truefalse': case 'shortanswer': case 'numerical': o.answers = antworten(q); o.usecase = txt(q, 'usecase') === '1'; break;
+      case 'matching': o.subs = kids(q, 'subquestion').map(function (s) { return { q: rich(s), a: txt(kid(s, 'answer'), 'text') }; }); break;
+      case 'gapselect': o.opts = kids(q, 'selectoption').map(function (s) { return { t: txt(s, 'text'), g: txt(s, 'group') || '1' }; }); parseLuecken(o); break;
+      case 'ddwtos': o.opts = kids(q, 'dragbox').map(function (s) { return { t: txt(s, 'text'), g: txt(s, 'group') || '1', inf: !!kid(s, 'infinite') }; }); parseLuecken(o); break;
+      case 'multianswer': parseCloze(o); break;
+      case 'essay': case 'aitext':
+        o.graderinfo = rich(kid(q, 'graderinfo')); o.vorlage = htmlText(roh(kid(q, 'responsetemplate')));
+        o.aiprompt = txt(q, 'aiprompt'); o.markscheme = txt(q, 'markscheme'); break;
+      case 'description': o.grade = 0; break;
+    }
+    if (o.typ !== 'multianswer' && o.typ !== 'gapselect' && o.typ !== 'ddwtos') o.html = clean(o.html);
+    pruefeFrage(o, q);
+    return o;
+  }
+  function pruefeFrage(o, q) {
+    var w = o.warn;
+    if (!o.name) w.push('Die Frage hat keinen Namen.');
+    if (o.answers) {
+      var max = 0, summe = 0;
+      o.answers.forEach(function (a) { if (a.f > max) max = a.f; if (a.f > 0) summe += a.f; });
+      if (o.typ === 'multichoice' && !o.single) { if (Math.abs(summe - 100) > 1) w.push('Die richtigen Antworten ergeben zusammen ' + proz(summe) + ' statt 100 %.'); }
+      else if (max < 100) w.push('Keine Antwort bringt 100 %.');
+      if (o.typ === 'multichoice' && o.answers.length < 2) w.push('Weniger als zwei Antworten.');
+      if (o.typ === 'truefalse' && (!o.answers.some(function (a) { return a.raw.toLowerCase() === 'true'; }) || !o.answers.some(function (a) { return a.raw.toLowerCase() === 'false'; })))
+        w.push('Wahr/Falsch braucht eine Antwort "true" und eine Antwort "false".');
+      var ohne = o.answers.filter(function (a) { return !htmlText(a.fb).trim(); });
+      if (ohne.length) w.push(ohne.length + ' Antwort(en) ohne Rückmeldung: ' + ohne.map(function (a) { return '"' + (a.raw || '?') + '"'; }).join(', '));
+    }
+    if (o.typ === 'matching' && o.subs.filter(function (s) { return htmlText(s.q).trim(); }).length < 3) w.push('Weniger als drei Zuordnungspaare.');
+    if ((/einsteiger/i.test(o.kat) || /^E\d/.test(o.name)) && !htmlText(o.general).trim() && o.typ !== 'description') w.push('Einsteigerniveau ohne allgemeines Feedback (generalfeedback).');
+    var sonder = (q.textContent.match(/[\u2018-\u201f\u2190-\u21ff\u2026\u2192\u21d2]/g) || []).filter(function (c, i, a) { return a.indexOf(c) === i; });
+    if (sonder.length) w.push('Sonderzeichen ' + sonder.join(' ') + ' gefunden: Die ByCS kann beim Import scheitern (gerade Anführungszeichen verwenden, keine Pfeile).');
+    if (!TYPNAME[o.typ]) w.push('Fragetyp "' + o.typ + '" kann die Vorschau nicht darstellen.');
+  }
+  function parseQuiz(text) {
+    text = text.replace(/^\ufeff/, '');
+    var doc = new DOMParser().parseFromString(text, 'application/xml');
+    var pe = doc.getElementsByTagName('parsererror')[0];
+    if (pe) throw new Error('Die XML-Datei ist fehlerhaft und würde beim Import scheitern:\n' + pe.textContent.trim().slice(0, 400));
+    var root = doc.documentElement;
+    if (root.tagName !== 'quiz') throw new Error('Das ist keine Moodle-XML-Quizdatei: Das Wurzelelement heißt <' + root.tagName + '>, erwartet ist <quiz>.');
+    var kat = 'Ohne Kategorie', qs = [], kats = [];
+    kids(root, 'question').forEach(function (q) {
+      var typ = q.getAttribute('type') || '?';
+      if (typ === 'category') { var p = txt(kid(q, 'category'), 'text'); kat = p.replace(/^\$[a-z0-9]+\$\/(top\/)?/i, '') || p || kat; return; }
+      if (kats.indexOf(kat) < 0) kats.push(kat);
+      var o = parseFrage(q, typ, kat); o.nr = qs.length + 1; qs.push(o);
+    });
+    if (!qs.length) throw new Error('Die Datei enthält keine Fragen.');
+    return { qs: qs, kats: kats };
+  }
+
+  /* ---------- Schülersicht: Fragetypen ---------- */
+  function kombiniert(q, s) { var f = s >= 0.99999 ? q.cf : s > 0 ? q.pf : q.nf; return htmlText(f || '').trim() ? '<div class="feedback">' + f + '</div>' : ''; }
+  function fb(h) { return htmlText(h || '').trim() ? '<div class="feedback">' + h + '</div>' : ''; }
+  function rechts(t) { return '<div class="rightanswer">' + t + '</div>'; }
+  function saPasst(ans, eingabe, gross) {
+    var r = eingabe.trim().replace(/\s+/g, ' ');
+    for (var i = 0; i < ans.length; i++) {
+      var teile = ans[i].raw.split(/(?<!\\)\*/).map(function (x) { return x.replace(/\\\*/g, '*').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
+      if (new RegExp('^' + teile.join('.*') + '$', gross ? '' : 'i').test(r)) return ans[i];
+    }
+    return null;
+  }
+  function numPasst(ans, v) {
+    for (var i = 0; i < ans.length; i++) {
+      var a = ans[i]; if (a.raw.trim() === '*') return a;
+      var z = zahl(a.raw); if (v !== null && z !== null && Math.abs(v - z) <= a.tol + 1e-9) return a;
+    }
+    return null;
+  }
+  var BAU = {};
+  BAU.multichoice = function (q, f, nr) {
+    var typ = q.single ? 'radio' : 'checkbox', h = '<div class="ablock"><div class="prompt">' + (q.single ? 'Wählen Sie eine Antwort:' : 'Wählen Sie eine oder mehrere Antworten:') + '</div><div class="answer">';
+    mische(q.answers.map(function (_, i) { return i; }), q.mischen).forEach(function (i, k) {
+      h += '<div class="r" data-i="' + i + '"><label><input type="' + typ + '" name="q' + nr + '" value="' + i + '"><span class="answernumber">' + nummer(k, q.numbering) + '</span><span class="atext">' + q.answers[i].t + '</span></label><span class="mark"></span><div class="specificfeedback"></div></div>';
+    });
+    f.insertAdjacentHTML('beforeend', h + '</div></div>');
+    function wahl() { return $$('input:checked', f).map(function (x) { return +x.value; }); }
+    return {
+      valid: function () { return wahl().length ? '' : LEER; },
+      grade: function () {
+        var s = 0, w = wahl();
+        w.forEach(function (i) {
+          var a = q.answers[i], r = $('.r[data-i="' + i + '"]', f), c = q.single ? kl(a.f / 100) : (a.f > 0 ? 'correct' : 'incorrect');
+          s += a.f / 100; r.classList.add(c); zeichen($('.mark', r), c); $('.specificfeedback', r).innerHTML = a.fb;
+        });
+        s = Math.max(0, Math.min(1, s));
+        var h = kombiniert(q, s);
+        if (!q.single && q.shownum && s < 1) h += '<div class="numpartscorrect">Sie haben ' + w.filter(function (i) { return q.answers[i].f > 0; }).length + ' richtige Antwort(en) ausgewählt.</div>';
+        var r = q.single ? [bester(q.answers)].filter(Boolean) : q.answers.filter(function (a) { return a.f > 0; });
+        return { score: s, fb: h, right: rechts((r.length > 1 ? 'Die richtigen Antworten sind: ' : 'Die richtige Antwort ist: ') + r.map(function (a) { return a.t; }).join(', ')) };
+      }
+    };
+  };
+  BAU.truefalse = function (q, f, nr) {
+    var at = q.answers.filter(function (a) { return a.raw.toLowerCase() === 'true'; })[0], af = q.answers.filter(function (a) { return a.raw.toLowerCase() === 'false'; })[0];
+    f.insertAdjacentHTML('beforeend', '<div class="ablock"><div class="prompt">Wählen Sie eine Antwort:</div><div class="answer">' +
+      [['true', 'Wahr'], ['false', 'Falsch']].map(function (p) { return '<div class="r" data-v="' + p[0] + '"><label><input type="radio" name="q' + nr + '" value="' + p[0] + '"><span>' + p[1] + '</span></label><span class="mark"></span></div>'; }).join('') + '</div></div>');
+    return {
+      valid: function () { return $('input:checked', f) ? '' : LEER; },
+      grade: function () {
+        var x = $('input:checked', f), a = x ? (x.value === 'true' ? at : af) : null, s = a ? a.f / 100 : 0;
+        if (x) { var r = $('.r[data-v="' + x.value + '"]', f); r.classList.add(kl(s)); zeichen($('.mark', r), kl(s)); }
+        return { score: s, fb: a ? fb(a.fb) : '', right: rechts('Die richtige Antwort ist \'' + (at && at.f >= 100 ? 'Wahr' : 'Falsch') + '\'.') };
+      }
+    };
+  };
+  BAU.shortanswer = function (q, f) {
+    f.insertAdjacentHTML('beforeend', '<div class="ablock"><label>Antwort: <input type="text" size="30" autocomplete="off" spellcheck="false"></label><span class="mark"></span></div>');
+    var inp = $('input', f);
+    return {
+      valid: function () { return inp.value.trim() ? '' : LEER; },
+      grade: function () {
+        var a = inp.value.trim() ? saPasst(q.answers, inp.value, q.usecase) : null, s = a ? a.f / 100 : 0, b = bester(q.answers);
+        inp.classList.add(kl(s) + '-f'); zeichen($('.mark', f), kl(s));
+        return { score: s, fb: a ? fb(a.fb) : '', right: b ? rechts('Die richtige Antwort ist: ' + b.t) : '' };
+      }
+    };
+  };
+  BAU.numerical = function (q, f) {
+    f.insertAdjacentHTML('beforeend', '<div class="ablock"><label>Antwort: <input type="text" size="15" autocomplete="off" inputmode="decimal"></label><span class="mark"></span></div>');
+    var inp = $('input', f);
+    return {
+      valid: function () { return !inp.value.trim() ? LEER : zahl(inp.value) === null ? 'Sie müssen eine gültige Zahl eingeben.' : ''; },
+      grade: function () {
+        var v = zahl(inp.value), a = inp.value.trim() ? numPasst(q.answers, v) : null, s = a ? a.f / 100 : 0, b = bester(q.answers);
+        inp.classList.add(kl(s) + '-f'); zeichen($('.mark', f), kl(s));
+        return { score: s, fb: a ? fb(a.fb) : '', right: b ? rechts('Die richtige Antwort ist: ' + esc(b.raw) + (b.tol ? ' (Toleranz \u00b1 ' + String(b.tol).replace('.', ',') + ')' : '')) : '' };
+      }
+    };
+  };
+  BAU.matching = function (q, f) {
+    var subs = q.subs.filter(function (s) { return htmlText(s.q).trim(); });
+    var wahl = mische(q.subs.map(function (s) { return s.a; }).filter(function (a, i, arr) { return arr.indexOf(a) === i; }), q.mischen);
+    f.insertAdjacentHTML('beforeend', '<div class="ablock"><table class="answer"><tbody>' + subs.map(function (s, k) {
+      return '<tr><td class="text">' + s.q + '</td><td class="control"><select data-k="' + k + '"><option value="">Auswählen \u2026</option>' +
+        wahl.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select><span class="mark"></span></td></tr>';
+    }).join('') + '</tbody></table></div>');
+    var sels = $$('select', f);
+    return {
+      valid: function () { var n = sels.filter(function (x) { return x.value; }).length; return !n ? LEER : n < sels.length ? 'Bitte beantworten Sie alle Teile der Frage.' : ''; },
+      grade: function () {
+        var n = 0;
+        sels.forEach(function (x, k) { var ok = x.value === subs[k].a; if (ok) n++; x.classList.add(ok ? 'correct-f' : 'incorrect-f'); zeichen(x.nextElementSibling, ok ? 'correct' : 'incorrect'); });
+        var s = subs.length ? n / subs.length : 0, h = kombiniert(q, s);
+        if (q.shownum && s < 1) h += '<div class="numpartscorrect">Sie haben ' + n + ' richtig ausgewählt.</div>';
+        return { score: s, fb: h, right: rechts('Die richtige Antwort ist: ' + subs.map(function (x) { return esc(htmlText(x.q).trim()) + ' \u2192 ' + esc(x.a); }).join(', ')) };
+      }
+    };
+  };
+  function lueckenErgebnis(q, f, werte) {
+    var n = 0;
+    q.gaps.forEach(function (g, k) { if (werte[k] != null && q.opts[g - 1] && q.opts[+werte[k]].t === q.opts[g - 1].t) n++; });
+    var s = q.gaps.length ? n / q.gaps.length : 0, h = kombiniert(q, s);
+    if (q.shownum && s < 1) h += '<div class="numpartscorrect">Sie haben ' + n + ' richtig ausgewählt.</div>';
+    return { score: s, fb: h, right: rechts('Die richtige Antwort ist: ' + htmlText(q.loesung.replace(/<mark class="gapok">([\s\S]*?)<\/mark>/g, '[$1]'))) };
+  }
+  function gruppenWahl(q) { var g = {}; q.opts.forEach(function (o, i) { (g[o.g] = g[o.g] || []).push(i); }); Object.keys(g).forEach(function (k) { g[k] = mische(g[k], q.mischen); }); return g; }
+  BAU.gapselect = function (q, f) {
+    var g = gruppenWahl(q), sels = [];
+    $$('span[data-gap]', f).forEach(function (sp) {
+      var op = q.opts[sp.dataset.gap - 1], grp = op ? op.g : '1';
+      sp.innerHTML = '<select><option value=""></option>' + (g[grp] || []).map(function (i) { return '<option value="' + i + '">' + esc(q.opts[i].t) + '</option>'; }).join('') + '</select><span class="mark"></span>';
+      sels.push($('select', sp));
+    });
+    return {
+      valid: function () { var n = sels.filter(function (x) { return x.value !== ''; }).length; return !n ? LEER : n < sels.length ? 'Bitte beantworten Sie alle Teile der Frage.' : ''; },
+      grade: function () {
+        sels.forEach(function (x, k) { var op = q.opts[q.gaps[k] - 1], ok = x.value !== '' && op && q.opts[+x.value].t === op.t; x.classList.add(ok ? 'correct-f' : 'incorrect-f'); zeichen(x.nextElementSibling, ok ? 'correct' : 'incorrect'); });
+        return lueckenErgebnis(q, f, sels.map(function (x) { return x.value === '' ? null : x.value; }));
+      }
+    };
+  };
+  BAU.ddwtos = function (q, f, nr, box) {
+    var g = gruppenWahl(q), drops = $$('span[data-gap]', f);
+    drops.forEach(function (sp) { var op = q.opts[sp.dataset.gap - 1]; sp.className = 'drop g' + (op ? op.g : '1'); sp.dataset.g = op ? op.g : '1'; sp.tabIndex = 0; sp.innerHTML = '&nbsp;'; });
+    var home = document.createElement('div'); home.className = 'draghome';
+    Object.keys(g).sort().forEach(function (grp) { g[grp].forEach(function (i) { home.insertAdjacentHTML('beforeend', '<span class="drag g' + grp + '" draggable="true" data-i="' + i + '" data-g="' + grp + '">' + esc(q.opts[i].t) + '</span>'); }); });
+    f.appendChild(home);
+    function chip(i) { return $('.drag[data-i="' + i + '"]', home); }
+    function leeren(d) { if (d.dataset.i == null) return; var c = chip(d.dataset.i); if (c) c.classList.remove('used'); delete d.dataset.i; d.innerHTML = '&nbsp;'; d.classList.remove('filled'); }
+    function setzen(d, i) {
+      if (q.opts[i].g !== d.dataset.g) return;
+      leeren(d); d.dataset.i = i; d.textContent = q.opts[i].t; d.classList.add('filled');
+      if (!q.opts[i].inf) { drops.forEach(function (x) { if (x !== d && x.dataset.i == i) leeren(x); }); chip(i).classList.add('used'); }
+      f.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    function waehle(c) { $$('.gewaehlt', f).forEach(function (x) { x.classList.remove('gewaehlt'); }); S.gewaehlt = c; if (c) c.classList.add('gewaehlt'); }
+    f.addEventListener('click', function (e) {
+      if (box.classList.contains('locked')) return;
+      var c = e.target.closest('.drag'), d = e.target.closest('.drop');
+      if (c) { waehle(S.gewaehlt === c ? null : c); return; }
+      if (d) { if (S.gewaehlt && home.contains(S.gewaehlt)) { setzen(d, +S.gewaehlt.dataset.i); waehle(null); } else { leeren(d); f.dispatchEvent(new Event('change', { bubbles: true })); } }
+    });
+    f.addEventListener('dragstart', function (e) {
+      if (box.classList.contains('locked')) { e.preventDefault(); return; }
+      var c = e.target.closest('.drag'), d = e.target.closest('.drop.filled');
+      S.quelle = d || null; var i = c ? c.dataset.i : d ? d.dataset.i : null;
+      if (i == null) return; e.dataTransfer.setData('text/plain', i); e.dataTransfer.effectAllowed = 'move';
+    });
+    drops.forEach(function (d) { d.draggable = true; });
+    f.addEventListener('dragover', function (e) { var d = e.target.closest('.drop'); if (d && !box.classList.contains('locked')) { e.preventDefault(); d.classList.add('ziel'); } });
+    f.addEventListener('dragleave', function (e) { var d = e.target.closest('.drop'); if (d) d.classList.remove('ziel'); });
+    f.addEventListener('drop', function (e) {
+      var d = e.target.closest('.drop'); if (!d) return; e.preventDefault(); d.classList.remove('ziel');
+      var i = e.dataTransfer.getData('text/plain'); if (i === '') return;
+      if (S.quelle && S.quelle !== d) leeren(S.quelle);
+      setzen(d, +i); S.quelle = null;
+    });
+    home.addEventListener('drop', function (e) { e.preventDefault(); if (S.quelle) { leeren(S.quelle); S.quelle = null; } });
+    home.addEventListener('dragover', function (e) { if (S.quelle) e.preventDefault(); });
+    return {
+      valid: function () { var n = drops.filter(function (x) { return x.dataset.i != null; }).length; return !n ? LEER : n < drops.length ? 'Bitte beantworten Sie alle Teile der Frage.' : ''; },
+      grade: function () {
+        drops.forEach(function (x, k) { var op = q.opts[q.gaps[k] - 1], ok = x.dataset.i != null && op && q.opts[+x.dataset.i].t === op.t; x.classList.add(ok ? 'correct-f' : 'incorrect-f'); x.insertAdjacentHTML('afterend', '<span class="mark ' + (ok ? 'correct' : 'incorrect') + '">' + (ok ? '\u2713' : '\u2717') + '</span>'); });
+        return lueckenErgebnis(q, f, drops.map(function (x) { return x.dataset.i == null ? null : x.dataset.i; }));
+      }
+    };
+  };
+  BAU.multianswer = function (q, f, nr) {
+    var teile = [];
+    $$('span[data-cloze]', f).forEach(function (sp) {
+      var k = +sp.dataset.cloze, sub = q.cloze[k], h = '';
+      var ord = mische(sub.answers.map(function (_, i) { return i; }), sub.mischen);
+      if (sub.typ === 'sa' || sub.typ === 'sac' || sub.typ === 'nm') {
+        var len = Math.min(30, Math.max(6, sub.answers.reduce(function (m, a) { return Math.max(m, a.raw.length); }, 0) + 2));
+        h = '<input type="text" size="' + len + '" autocomplete="off" spellcheck="false">';
+      } else if (sub.typ === 'mc') {
+        h = '<select><option value=""></option>' + ord.map(function (i) { return '<option value="' + i + '">' + esc(sub.answers[i].raw) + '</option>'; }).join('') + '</select>';
+      } else {
+        var art = /^mr/.test(sub.typ) ? 'checkbox' : 'radio', lage = /h$/.test(sub.typ) ? 'h' : 'v';
+        h = '<span class="cl ' + lage + '">' + ord.map(function (i) { return '<label><input type="' + art + '" name="q' + nr + 'c' + k + '" value="' + i + '"> ' + sub.answers[i].t + '</label>'; }).join('') + '</span>';
+      }
+      sp.innerHTML = h + '<span class="mark"></span>';
+      teile.push({ sp: sp, sub: sub });
+    });
+    function antwort(t) {
+      var sub = t.sub, sp = t.sp;
+      if (sub.typ === 'sa' || sub.typ === 'sac') { var v = $('input', sp).value; return v.trim() ? saPasst(sub.answers, v, sub.typ === 'sac') : undefined; }
+      if (sub.typ === 'nm') { var w = $('input', sp).value; return w.trim() ? numPasst(sub.answers, zahl(w)) : undefined; }
+      if (sub.typ === 'mc') { var x = $('select', sp).value; return x === '' ? undefined : sub.answers[+x]; }
+      var c = $$('input:checked', sp).map(function (y) { return sub.answers[+y.value]; });
+      return c.length ? c : undefined;
+    }
+    return {
+      valid: function () { return teile.some(function (t) { return antwort(t) !== undefined; }) ? '' : LEER; },
+      grade: function () {
+        var summe = 0;
+        teile.forEach(function (t) {
+          var a = antwort(t), s, text = '';
+          if (Array.isArray(a)) { s = Math.max(0, Math.min(1, a.reduce(function (m, b) { return m + b.f / 100; }, 0))); text = a.map(function (b) { return b.fb; }).filter(function (x) { return htmlText(x).trim(); }).join(' '); }
+          else { s = a ? a.f / 100 : 0; text = a ? a.fb : ''; }
+          summe += s * t.sub.w;
+          var c = kl(s), feld = $('input[type=text],select', t.sp);
+          if (feld) feld.classList.add(c + '-f');
+          zeichen($('.mark', t.sp), c);
+          if (s < 1) { var r = t.sub.answers.filter(function (b) { return b.f >= 100 || (/^mr/.test(t.sub.typ) && b.f > 0); }).map(function (b) { return b.t; }); if (r.length) text += (htmlText(text).trim() ? ' ' : '') + 'Richtige Antwort: ' + r.join(', '); }
+          if (htmlText(text).trim()) t.sp.insertAdjacentHTML('beforeend', '<span class="cfb">' + text + '</span>');
+        });
+        var s = q.grade ? summe / q.grade : 0;
+        return { score: s, fb: kombiniert(q, s), right: '' };
+      }
+    };
+  };
+  function freitext(q, f) {
+    f.insertAdjacentHTML('beforeend', '<div class="ablock"><textarea rows="8" spellcheck="true">' + esc(q.vorlage || '') + '</textarea></div>');
+    var ta = $('textarea', f);
+    return {
+      valid: function () { return ta.value.trim() && ta.value.trim() !== (q.vorlage || '').trim() ? '' : LEER; },
+      grade: function () {
+        return { score: null, fb: '<div class="feedback">' + (q.typ === 'aitext' ? 'In der ByCS gibt hier die KI eine Rückmeldung und einen Punktevorschlag. Das kann die Vorschau nicht.' : 'Diese Antwort bewertet die Lehrkraft nach der Abgabe von Hand.') + '</div>', right: '' };
+      }
+    };
+  }
+  BAU.essay = freitext; BAU.aitext = freitext;
+
+  /* ---------- Schülersicht: Rahmen ---------- */
+  function infoSpalte(q, nr) {
+    if (q.typ === 'description') return '<div class="info"><h3 class="no">Information</h3><div class="qname">' + esc(q.name) + '</div></div>';
+    return '<div class="info"><h3 class="no">Frage <span class="qno">' + nr + '</span></h3><div class="state">Noch nicht beantwortet</div><div class="grade">Erreichbare Punkte: ' + fmt(q.grade) + '</div><div class="qname" title="Name in der Fragensammlung">' + esc(q.name) + '</div></div>';
+  }
+  function frageSchueler(q) {
+    var box = document.createElement('div'); box.className = 'que ' + q.typ; box.id = 'frage' + q.nr;
+    box.innerHTML = infoSpalte(q, q.nr) + '<div class="content"><div class="formulation"><div class="qtext">' + q.html + '</div></div><div class="outcome" hidden></div><div class="im-controls"></div></div>';
+    var f = $('.formulation', box), ctl = $('.im-controls', box);
+    box._q = q; box._st = { geprueft: false, score: null, leer: true };
+    if (!BAU[q.typ]) {
+      if (q.typ !== 'description') f.insertAdjacentHTML('beforeend', '<div class="hinweis">Fragetyp "' + esc(q.typ) + '" kann die Vorschau nicht darstellen. Er wird in der ByCS nur importiert, wenn das passende Plugin vorhanden ist.</div>');
+      return box;
+    }
+    box._ctl = BAU[q.typ](q, f, q.nr, box);
+    ctl.innerHTML = '<button type="button" class="btn btn-secondary" data-akt="pruefen">Prüfen</button><span class="validationerror" hidden></span>';
+    var neu = function () { if (box._st.geprueft) return; var leer = box._ctl.valid() === LEER; box._st.leer = leer; $('.state', box).textContent = leer ? 'Noch nicht beantwortet' : 'Beantwortet'; $('.validationerror', box).hidden = true; navAktualisieren(); };
+    f.addEventListener('input', neu); f.addEventListener('change', neu);
+    return box;
+  }
+  function pruefen(box, alle) {
+    var st = box._st, q = box._q; if (!box._ctl || st.geprueft) return;
+    var msg = box._ctl.valid();
+    if (msg && !alle) { var v = $('.validationerror', box); v.textContent = msg; v.hidden = false; return; }
+    var r = box._ctl.grade();
+    st.geprueft = true; st.score = r.score; st.leer = msg === LEER;
+    $$('input,select,textarea', $('.formulation', box)).forEach(function (x) { x.disabled = true; });
+    $$('[draggable]', box).forEach(function (x) { x.draggable = false; });
+    box.classList.add('locked');
+    var out = $('.outcome', box);
+    out.innerHTML = r.fb + (htmlText(q.general).trim() ? '<div class="generalfeedback">' + q.general + '</div>' : '') + r.right;
+    out.hidden = !out.innerHTML.trim();
+    if (r.score === null) { $('.state', box).textContent = 'Bewertung ausstehend'; $('.grade', box).textContent = 'Erreichbare Punkte: ' + fmt(q.grade); box.classList.add('pending'); }
+    else {
+      $('.state', box).textContent = st.leer ? 'Nicht beantwortet' : { correct: 'Richtig', partiallycorrect: 'Teilweise richtig', incorrect: 'Falsch' }[kl(r.score)];
+      $('.grade', box).textContent = 'Erreichte Punkte ' + fmt(r.score * q.grade) + ' von ' + fmt(q.grade);
+      box.classList.add(kl(r.score));
+    }
+    $('.im-controls', box).innerHTML = '<button type="button" class="btn" data-akt="neu">Erneut versuchen</button>';
+    navAktualisieren();
+  }
+  function neuBeginnen(box) { var n = frageSchueler(box._q); box.parentNode.replaceChild(n, box); navAktualisieren(); }
+
+  /* ---------- Review-Sicht ---------- */
+  function antwortTabelle(q) {
+    return '<table class="rv"><thead><tr><th>Antwort</th><th>Punkte</th><th>Rückmeldung</th></tr></thead><tbody>' + q.answers.map(function (a) {
+      var t = q.typ === 'truefalse' ? (a.raw.toLowerCase() === 'true' ? 'Wahr' : 'Falsch') : a.raw === '*' ? '<span class="leer">* (alle anderen Eingaben)</span>' : a.t;
+      if (q.typ === 'numerical' && a.raw !== '*' && a.tol) t += ' <span class="leer">\u00b1 ' + String(a.tol).replace('.', ',') + '</span>';
+      return '<tr class="' + (a.f >= 100 ? 'ok' : a.f > 0 ? 'teil' : 'nein') + '"><td>' + t + '</td><td class="pz">' + proz(a.f) + '</td><td>' + (htmlText(a.fb).trim() ? a.fb : '<span class="leer">keine</span>') + '</td></tr>';
+    }).join('') + '</tbody></table>';
+  }
+  function reviewDetails(q) {
+    var h = '', ja = function (b) { return b ? 'ja' : 'nein'; };
+    switch (q.typ) {
+      case 'multichoice': h = '<div class="meta">' + (q.single ? 'Eine Antwort' : 'Mehrere Antworten') + ' \u00b7 Mischen: ' + ja(q.mischen) + ' \u00b7 Nummerierung: ' + esc(q.numbering) + '</div>' + antwortTabelle(q); break;
+      case 'truefalse': case 'numerical': h = antwortTabelle(q); break;
+      case 'shortanswer': h = '<div class="meta">Groß-/Kleinschreibung: ' + (q.usecase ? 'beachten' : 'egal') + '</div>' + antwortTabelle(q); break;
+      case 'matching':
+        var ablenker = q.subs.filter(function (s) { return !htmlText(s.q).trim(); }).map(function (s) { return esc(s.a); });
+        h = '<div class="meta">Mischen: ' + ja(q.mischen) + '</div><table class="rv"><thead><tr><th>Frage</th><th>Richtige Antwort</th></tr></thead><tbody>' +
+          q.subs.filter(function (s) { return htmlText(s.q).trim(); }).map(function (s) { return '<tr class="ok"><td>' + s.q + '</td><td>' + esc(s.a) + '</td></tr>'; }).join('') + '</tbody></table>' +
+          (ablenker.length ? '<div class="meta">Zusätzliche falsche Antworten: ' + ablenker.join(', ') + '</div>' : ''); break;
+      case 'gapselect': case 'ddwtos':
+        h = '<div class="meta">Mischen: ' + ja(q.mischen) + '</div><table class="rv"><thead><tr><th>Nr.</th><th>Option</th><th>Gruppe</th><th>Verwendung</th></tr></thead><tbody>' + q.opts.map(function (o, i) {
+          var luecken = q.gaps.filter(function (g) { return g === i + 1; });
+          return '<tr class="' + (luecken.length ? 'ok' : 'nein') + '"><td>' + (i + 1) + '</td><td>' + esc(o.t) + (o.inf ? ' <span class="leer">(beliebig oft)</span>' : '') + '</td><td>' + esc(o.g) + '</td><td>' + (luecken.length ? 'richtig in Lücke [[' + (i + 1) + ']]' : 'Ablenker') + '</td></tr>';
+        }).join('') + '</tbody></table>'; break;
+      case 'multianswer':
+        h = '<table class="rv"><thead><tr><th>Lücke</th><th>Art</th><th>Punkte</th><th>Antworten und Rückmeldung</th></tr></thead><tbody>' + q.cloze.map(function (s, k) {
+          return '<tr><td>' + (k + 1) + '</td><td>' + CLOZENAME[s.typ] + (s.mischen ? ', gemischt' : '') + '</td><td class="pz">' + s.w + '</td><td>' + s.answers.map(function (a) {
+            return '<div><b class="' + (a.f >= 100 ? 'ok-text' : '') + '">' + (a.raw === '*' ? '* (alle anderen)' : esc(a.raw)) + (a.tol ? ' \u00b1 ' + a.tol : '') + '</b> (' + proz(a.f) + ')' + (htmlText(a.fb).trim() ? ': ' + a.fb : '') + '</div>';
+          }).join('') + '</td></tr>';
+        }).join('') + '</tbody></table>'; break;
+      case 'essay': case 'aitext':
+        h = '<dl class="fbk">' + (q.aiprompt ? '<dt>KI-Anweisung</dt><dd>' + esc(q.aiprompt) + '</dd>' : '') + (q.markscheme ? '<dt>Bewertungsschema</dt><dd>' + esc(q.markscheme) + '</dd>' : '') +
+          '<dt>Infos für Bewertende</dt><dd>' + (htmlText(q.graderinfo).trim() ? q.graderinfo : '<span class="leer">leer</span>') + '</dd></dl>'; break;
+    }
+    return h;
+  }
+  function feedbackListe(q) {
+    var zeile = function (t, h) { return '<dt>' + t + '</dt><dd>' + (htmlText(h || '').trim() ? h : '<span class="leer">leer</span>') + '</dd>'; };
+    var h = '<dl class="fbk">';
+    if (/^(multichoice|matching|gapselect|ddwtos)$/.test(q.typ) || (q.typ === 'multianswer' && (q.cf || q.pf || q.nf)))
+      h += zeile('Richtig', q.cf) + zeile('Teilweise richtig', q.pf) + zeile('Falsch', q.nf);
+    if (q.typ !== 'description') h += zeile('Allgemeines Feedback', q.general);
+    return h + '</dl>';
+  }
+  function frageReview(q) {
+    var box = document.createElement('div'); box.className = 'que review ' + q.typ + (q.warn.length ? ' haswarn' : ''); box.id = 'frage' + q.nr;
+    box.innerHTML = '<div class="info"><h3 class="no">Frage <span class="qno">' + q.nr + '</span></h3><div class="typ">' + esc(TYPNAME[q.typ] || q.typ) + '</div><div class="grade">Punkte: ' + fmt(q.grade) + '</div><div class="qname">' + esc(q.name) + '</div></div>' +
+      '<div class="content"><div class="formulation"><div class="qtext">' + (q.loesung || q.html) + '</div>' + reviewDetails(q) + feedbackListe(q) + '</div>' +
+      (q.warn.length ? '<div class="hinweis"><b>Hinweise:</b><ul class="warnliste">' + q.warn.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') + '</ul></div>' : '') + '</div>';
+    return box;
+  }
+  function ueberblick(qs) {
+    var punkte = qs.reduce(function (a, q) { return a + q.grade; }, 0), typen = {}, kats = {}, warn = [];
+    qs.forEach(function (q) {
+      typen[q.typ] = (typen[q.typ] || 0) + 1;
+      var k = kats[q.kat] = kats[q.kat] || { n: 0, p: 0 }; k.n++; k.p += q.grade;
+      q.warn.forEach(function (w) { warn.push('<li><a href="#frage' + q.nr + '">Frage ' + q.nr + ' (' + esc(q.name) + ')</a>: ' + esc(w) + '</li>'); });
+    });
+    return '<div class="rv-summary"><h2>Überblick</h2><div class="kpis"><div class="kpi"><b>' + qs.length + '</b>Fragen</div><div class="kpi"><b>' + fmt(punkte) + '</b>Punkte</div><div class="kpi"><b>' + warn.length + '</b>Hinweise</div></div>' +
+      '<table class="rv"><thead><tr><th>Kategorie</th><th>Fragen</th><th>Punkte</th></tr></thead><tbody>' + Object.keys(kats).map(function (k) { return '<tr><td>' + esc(k) + '</td><td class="pz">' + kats[k].n + '</td><td class="pz">' + fmt(kats[k].p) + '</td></tr>'; }).join('') + '</tbody></table>' +
+      '<div class="meta">Fragetypen: ' + Object.keys(typen).map(function (t) { return esc(TYPNAME[t] || t) + ' ' + typen[t]; }).join(' \u00b7 ') + '</div>' +
+      (warn.length ? '<div class="hinweis"><b>Bitte prüfen:</b><ul class="warnliste">' + warn.join('') + '</ul></div>' : '<p class="ok-text">Keine Hinweise: Die Fragen sind vollständig.</p>') + '</div>';
+  }
+
+  /* ---------- Seite aufbauen ---------- */
+  function sichtbar() { return S.quiz.qs.filter(function (q) { return !S.kat || q.kat === S.kat; }); }
+  function aufbauen() {
+    var main = $('#fragen'), qs = sichtbar(), kat = null;
+    main.innerHTML = '';
+    $$('.seg button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.ansicht === S.ansicht)); });
+    $('#mischwahl').hidden = S.ansicht === 'review';
+    if (S.ansicht === 'review') main.insertAdjacentHTML('beforeend', ueberblick(qs));
+    qs.forEach(function (q) {
+      if (q.kat !== kat) { kat = q.kat; var n = qs.filter(function (x) { return x.kat === kat; }).length; main.insertAdjacentHTML('beforeend', '<h2 class="kat">' + esc(kat.split('/').join(' \u203a ')) + ' <small>' + n + ' Frage(n)</small></h2>'); }
+      main.appendChild(S.ansicht === 'review' ? frageReview(q) : frageSchueler(q));
+    });
+    if (S.ansicht === 'schueler') main.insertAdjacentHTML('beforeend', '<div class="summary" id="summe"></div>');
+    $('#navbtns').innerHTML = S.ansicht === 'schueler' ? '<button type="button" class="btn btn-primary" data-akt="alle">Alle prüfen</button><button type="button" class="btn" data-akt="reset">Alle zurücksetzen</button>' : '<button type="button" class="btn" data-akt="drucken">Prüfliste drucken</button>';
+    navAktualisieren();
+  }
+  function navAktualisieren() {
+    if (!S.quiz) return;
+    var qs = sichtbar(), html = '', punkte = 0, max = 0, geprueft = 0, auto = 0, frei = 0;
+    qs.forEach(function (q) {
+      var c = 'qnbutton', box = document.getElementById('frage' + q.nr);
+      if (q.typ === 'description') c += ' info';
+      if (S.ansicht === 'review') { if (q.warn.length) c += ' haswarn'; }
+      else if (box && box._st) {
+        var st = box._st;
+        if (st.geprueft) c += st.score === null ? ' pending' : ' ' + kl(st.score); else if (!st.leer) c += ' answered';
+        if (st.score === null && (q.typ === 'essay' || q.typ === 'aitext')) frei++;
+        else if (q.grade > 0 && box._ctl) { auto++; max += q.grade; if (st.geprueft) { geprueft++; punkte += st.score * q.grade; } }
+      }
+      html += '<a class="' + c + '" href="#frage' + q.nr + '" title="' + esc(q.name) + '"><span>' + (q.typ === 'description' ? 'i' : q.nr) + '</span><i></i></a>';
+    });
+    $('#qn').innerHTML = html;
+    if (S.ansicht === 'review') { $('#navsum').innerHTML = 'Gelb markiert: Fragen mit Hinweisen.'; return; }
+    var text = 'Geprüft: <b>' + geprueft + '</b> von ' + auto + ' Fragen<br>Punkte: <b>' + fmt(punkte) + '</b> von ' + fmt(max) + (max ? ' (' + String(Math.round(punkte / max * 1000) / 10).replace('.', ',') + ' %)' : '') + (frei ? '<br>' + frei + ' Freitextfrage(n) ohne Punkte' : '');
+    $('#navsum').innerHTML = text;
+    var s = $('#summe'); if (s) s.innerHTML = '<div>Bewertung: ' + text.replace(/<br>/g, ' \u00b7 ') + '</div><button type="button" class="btn btn-primary" data-akt="alle">Alle prüfen</button><button type="button" class="btn" data-akt="reset">Alle zurücksetzen</button>';
+  }
+
+  function laden(text, datei) {
+    var quiz;
+    try { quiz = parseQuiz(text); } catch (e) { fehler(e.message); return; }
+    $('#fehler').hidden = true;
+    S.quiz = quiz; S.datei = datei || ''; S.kat = '';
+    var titel = quiz.kats.length === 1 ? quiz.kats[0].split('/').pop() : (datei || 'Quiz').replace(/\.xml$/i, '');
+    var punkte = quiz.qs.reduce(function (a, q) { return a + q.grade; }, 0);
+    $('#titel').textContent = titel;
+    document.title = 'Vorschau ' + titel;
+    $('#untertitel').textContent = (datei ? 'Datei: ' + datei + ' \u00b7 ' : '') + quiz.qs.length + ' Fragen \u00b7 ' + fmt(punkte) + ' Punkte \u00b7 ' + quiz.kats.length + ' Kategorie(n)';
+    $('#katwahl').innerHTML = '<option value="">Alle Kategorien</option>' + quiz.kats.map(function (k) { return '<option value="' + esc(k) + '">' + esc(k.split('/').join(' \u203a ')) + '</option>'; }).join('');
+    $('#start').hidden = true; $('#app').hidden = false;
+    aufbauen();
+  }
+  function dateiLesen(file) {
+    if (!file) return;
+    var r = new FileReader();
+    r.onload = function () { laden(String(r.result), file.name); };
+    r.onerror = function () { fehler('Die Datei konnte nicht gelesen werden.'); };
+    r.readAsText(file, 'utf-8');
+  }
+
+  /* ---------- Bedienung ---------- */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-akt],[data-ansicht]'); if (!b) return;
+    if (b.dataset.ansicht) { S.ansicht = b.dataset.ansicht; LS.set('quiz-vorschau-ansicht', S.ansicht); aufbauen(); return; }
+    var box = b.closest('.que');
+    switch (b.dataset.akt) {
+      case 'pruefen': pruefen(box, false); break;
+      case 'neu': neuBeginnen(box); break;
+      case 'alle': $$('#fragen .que').forEach(function (x) { pruefen(x, true); }); break;
+      case 'reset': aufbauen(); break;
+      case 'drucken': window.print(); break;
+    }
+  });
+  $('#katwahl').addEventListener('change', function () { S.kat = this.value; aufbauen(); });
+  $('#mischen').addEventListener('change', function () { S.mischen = this.checked; aufbauen(); });
+  ['#datei1', '#datei2'].forEach(function (id) { $(id).addEventListener('change', function () { dateiLesen(this.files[0]); this.value = ''; }); });
+  document.addEventListener('dragover', function (e) { if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types, 'Files') >= 0) { e.preventDefault(); document.body.classList.add('ueber'); } });
+  document.addEventListener('dragleave', function (e) { if (!e.relatedTarget) document.body.classList.remove('ueber'); });
+  document.addEventListener('drop', function (e) {
+    document.body.classList.remove('ueber');
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) { e.preventDefault(); dateiLesen(e.dataTransfer.files[0]); }
+  });
+  function thema(t) { document.documentElement.setAttribute('data-theme', t); }
+  thema(LS.get('quiz-vorschau-theme') === 'dark' ? 'dark' : 'light');
+  $('#tglTheme').addEventListener('click', function () { var t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; thema(t); LS.set('quiz-vorschau-theme', t); });
+
+  /* ---------- Start: eingebettete XML (Vorschau.html) oder Datei-Auswahl ---------- */
+  var daten = $('#quizdaten'), b64 = daten.textContent.replace(/\s+/g, '');
+  if (b64) {
+    try {
+      var bin = atob(b64), u = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      laden(new TextDecoder('utf-8').decode(u), daten.getAttribute('data-datei'));
+    } catch (e) { fehler('Die eingebettete Quizdatei ist beschädigt: ' + e.message + '. Vorschau neu erzeugen: python .claude/skills/ByCS-Fragenersteller/scripts/quiz-vorschau.py <Datei.xml>'); }
+  }
+})();
+</script>
+</body>
+</html>

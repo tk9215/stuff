@@ -1,0 +1,21 @@
+{
+  "model": "sonnet",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit(./Unterricht/**)",
+      "WebSearch"
+    ],
+    "deny": [
+      "PowerShell",
+      "Bash(powershell:*)",
+      "Bash(pwsh:*)",
+      "Bash(git config bycs.werkzeug:*)",
+      "Bash(git config --local bycs.werkzeug:*)",
+      "Bash(git config --global bycs.werkzeug:*)",
+      "Bash(git config --add bycs.werkzeug:*)",
+      "Bash(git config --replace-all bycs.werkzeug:*)",
+      "Edit(./.git/config)"
+    ]
+  }
+}

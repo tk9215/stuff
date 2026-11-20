@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Handbuch</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #17243b; background: #f3f5f8; }
+    body { margin: 0; }
+    header { padding: 2rem max(1.25rem, calc((100% - 68rem) / 2)); color: white; background: #17345c; }
+    header p { max-width: 48rem; line-height: 1.6; }
+    .layout { display: grid; grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr); gap: 2rem; max-width: 72rem; margin: 2rem auto; padding: 0 1.25rem; }
+    nav, main { min-width: 0; }
+    nav { position: sticky; top: 1rem; align-self: start; padding: 1rem; border-radius: .75rem; background: white; }
+    nav a { display: block; padding: .35rem 0; color: #17345c; text-decoration: none; }
+    nav a:hover, a { color: #1456a0; }
+    .navgruppe { margin-bottom: .75rem; }
+    .navkopf { font-weight: 700; }
+    main { padding: 1.5rem; border-radius: .75rem; background: white; }
+    section + section { margin-top: 2.5rem; }
+    h1, h2, h3 { line-height: 1.25; }
+    h2 { padding-bottom: .4rem; border-bottom: 1px solid #dce2ea; }
+    p, li { line-height: 1.65; }
+    .stand { color: #5a6678; font-size: .9rem; }
+    .karten { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; }
+    .karte { padding: 1rem; border: 1px solid #dce2ea; border-radius: .6rem; }
+    .name { font-weight: 700; }
+    .prompt { color: #5a6678; }
+    .fragen { display: none; }
+    @media (max-width: 48rem) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Handbuch</h1>
+    <p>Ein Einstieg in die Materialien, Werkzeuge und Abläufe dieses Projekts. Wähle ein Thema oder beschreibe der KI, wobei du Unterstützung brauchst.</p>
+  </header>
+  <div class="layout">
+    <nav aria-label="Inhaltsübersicht">
+      <!-- AUTO:navi -->
+<div class="navgruppe" data-weg="immer"><a class="navkopf" href="#start">Willkommen</a>
+</div>
+<div class="navgruppe" data-weg="erstellen"><a class="navkopf" href="#material">Material erstellen</a>
+<a href="#skills">Verfügbare Werkzeuge</a>
+</div>
+<div class="navgruppe" data-weg="immer"><a class="navkopf" href="#neu">Aktuelles</a>
+</div>
+<div class="navgruppe" data-weg="immer"><a class="navkopf" href="#notizen">Notizen festhalten</a>
+</div>
+<div class="navgruppe" data-weg="immer"><a class="navkopf" href="#ablage">Dateien und Ablage</a>
+</div>
+<div class="navgruppe" data-weg="immer"><a class="navkopf" href="#hilfe">Hilfe und Rückmeldungen</a>
+</div>
+<!-- /AUTO:navi -->
+    </nav>
+    <main>
+      <section data-weg="immer">
+        <h2 id="start">Willkommen</h2>
+        <p>Dieses Projekt unterstützt die Planung und Erstellung von Unterrichtsmaterial. Die verfügbaren Werkzeuge findest du weiter unten. Du kannst direkt mit einer Aufgabe beginnen oder zuerst die passende Funktion auswählen.</p>
+        <p><strong><!-- AUTO:zahlen --><b>0</b> Lernpakete · <b>12</b> Skills<!-- /AUTO:zahlen --></strong></p>
+        <p class="stand">Stand: <!-- AUTO:stand -->16.11.2026<!-- /AUTO:stand --></p>
+      </section>
+
+      <section data-weg="erstellen">
+        <h2 id="material">Material erstellen</h2>
+        <p>Beschreibe dein Ziel und nenne vorhandene Quellen. Wenn ein Werkzeug Angaben wie Fach, Jahrgang oder Ablageort benötigt, wirst du danach gefragt.</p>
+        <h3 id="skills">Verfügbare Werkzeuge</h3>
+        <!-- AUTO:skills -->
+<div class="karten">
+<div class="karte"><code class="name">/Baue-E-Learning</code><p>Erstellt ein interaktives Lernangebot aus Aufgaben und Lösung oder überarbeitet eine vorhandene HTML-Seite</p><p class="prompt">Erstelle ein Lernangebot aus diesen Unterlagen</p></div>
+<div class="karte"><code class="name">/Baue-Testvorbereitung</code><p>Erstellt ein Lernskript, Übungen, eine Prüfungssimulation und eine Papierversion</p><p class="prompt">Erstelle eine Testvorbereitung zu diesem Thema</p></div>
+<div class="karte"><code class="name">/Baue-Lernpaket</code><p>Bereitet ein Lernangebot als Paket für eine Lernplattform auf</p><p class="prompt">Erstelle ein Lernpaket aus diesem Ordner</p></div>
+<div class="karte"><code class="name">/Baue-Kurs</code><p>Erstellt eine Kurssicherung aus fertigen Materialien</p><p class="prompt">Erstelle einen Kurs aus diesen Materialien</p></div>
+<div class="karte"><code class="name">/Baue-Arbeitsblatt</code><p>Erstellt ein Arbeitsblatt in drei Schwierigkeitsstufen mit Lösung</p><p class="prompt">Erstelle ein Arbeitsblatt zu diesem Thema</p></div>
+<div class="karte"><code class="name">/ByCS-Fragenersteller</code><p>Erstellt Fragen für einen Online-Test und eine Vorschau</p><p class="prompt">Erstelle Testfragen zu diesem Thema</p></div>
+<div class="karte"><code class="name">/ByCS-Test</code><p>Erstellt eine fertige Test-Aktivität für eine Lernplattform</p><p class="prompt">Erstelle einen Test zu diesem Thema</p></div>
+<div class="karte"><code class="name">/Uebungs-App</code><p>Erstellt ein kleines Lernspiel als einzelne Seite</p><p class="prompt">Erstelle Lernkarten zu diesem Thema</p></div>
+<div class="karte"><code class="name">/Einheit-planen</code><p>Plant eine Unterrichtsreihe mit Terminen und Kalenderdatei</p><p class="prompt">Plane eine Unterrichtsreihe zu diesem Thema</p></div>
+<div class="karte"><code class="name">/Raster-Feedback</code><p>Gibt konkretes Feedback zu anonymisierten Arbeiten anhand eines Bewertungsrasters</p><p class="prompt">Gib Feedback zu dieser anonymisierten Arbeit</p></div>
+<div class="karte"><code class="name">/Notizen</code><p>Verwaltet den gemeinsamen Notizzettel und Themenordner</p><p class="prompt">Notier: Dieses Thema weiter bearbeiten</p></div>
+<div class="karte"><code class="name">/ByCS-Kursbanner</code><p>Erstellt ein Kursbanner mit Fach, Stufe und Bild</p><p class="prompt">Erstelle ein Kursbanner für ein Fach</p></div>
+</div>
+<!-- /AUTO:skills -->
+      </section>
+
+      <section data-weg="immer">
+        <h2 id="neu">Aktuelles</h2>
+        <!-- AUTO:neu -->
+<ol class="zeitleiste">
+</ol>
+<details class="aelter"><summary>Ältere Änderungen und Neues am Werkzeug</summary><ol class="zeitleiste">
+<li class="neu-system"><time>16.11.2026</time><span class="art">System</span><p>Der Projektleitfaden und die Kurzübersicht für den Einstieg sind jetzt im Repository enthalten.</p></li>
+</ol></details>
+<!-- /AUTO:neu -->
+      </section>
+
+      <section data-weg="immer">
+        <h2 id="notizen">Notizen festhalten</h2>
+        <p>Offene Aufgaben und Stichworte kommen in den gemeinsamen Notizzettel. Nenne der KI den Inhalt deiner Notiz; neue Einträge erscheinen zunächst im Eingang und tragen Ersteller und Datum.</p>
+        <p>Zum Nachschlagen kannst du nach offenen Punkten oder einem Thema aus den Notizen fragen.</p>
+      </section>
+
+      <section data-weg="immer">
+        <h2 id="ablage">Dateien und Ablage</h2>
+        <p>Gib bei einer gewünschten Zustellung den vollständigen Zielpfad an. Die KI fragt nach, wenn der Pfad oder das Ziel unklar ist. Dateien werden nicht ungefragt kopiert oder hochgeladen.</p>
+      </section>
+
+      <section data-weg="immer">
+        <h2 id="hilfe">Hilfe und Rückmeldungen</h2>
+        <p>Beschreibe, was du erreichen möchtest, und nenne relevante Dateien oder Fehlermeldungen. Bei Änderungen an bestehenden Materialien kannst du den betroffenen Pfad angeben.</p>
+        <p>Wenn etwas nicht wie erwartet funktioniert, hilft der genaue Wortlaut der Fehlermeldung bei der Klärung.</p>
+        <!-- AUTO:fragen -->
+<ul class="fragen">
+<li><a href="#material">Wie erstelle ich Unterrichtsmaterial?</a></li>
+<li><a href="#skills">Welche Werkzeuge gibt es?</a></li>
+<li><a href="#notizen">Wie halte ich eine offene Aufgabe fest?</a></li>
+<li><a href="#notizen">Wie frage ich nach einem Thema aus den Notizen?</a></li>
+<li><a href="#ablage">Was ist bei einer gewünschten Zustellung zu beachten?</a></li>
+<li><a href="#hilfe">Welche Angaben helfen bei einer Fehlermeldung?</a></li>
+</ul>
+<!-- /AUTO:fragen -->
+      </section>
+    </main>
+  </div>
+</body>
+</html>

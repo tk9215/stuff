@@ -1,0 +1,1604 @@
+<!doctype html>
+<!--
+  TEMPLATE "Lernschritte" für E-Learnings aus dem Skill Baue-E-Learning (Alternative zu Fachunterricht.html, Auswahl in Baue-E-Learning Schritt 1).
+  Aussehen wie Unterricht/ALLE10/Eth/BW1/Die-ethische-Brille/index.html (umgebaut aus Ressourcen/Quellen/Ethik/Ethik10_Ethische_Brille_eLearning.html): dunkles Kopfband mit Logo, Schritt-Leiste (eine Bildschirmseite pro Schritt),
+  Stunden-Label, Phasen mit Sozialform, Minuten und Timer, Karten mit Etikett, Ergebnis-Seite am Ende.
+  Claude: Datei kopieren, diesen Kommentar löschen, ALLE <style>- und <script>-Blöcke unverändert lassen, <title>, Kopf und <main> füllen.
+  Die mit "Fachunterricht.html:NAME" markierten Bereiche sind 1:1 aus Fachunterricht.html (eingefügt von scripts/sync-vorlage.py, nie von Hand ändern).
+  Darum gilt hier alles aus dem TEMPLATE-Kommentar von Fachunterricht.html genauso: Aufgaben (.task mit .tt, Felder nur INNERHALB, je Feld data-k),
+  Niveaus (section.level foundation|core|challenge, 40/40/20, bestanden ab 70 %), Bewertung (data-ok, data-tol, data-keys, data-score),
+  Punkte je Aufgabe (oben rechts an der Aufgabe und in der Ergebnis-Seite; Gewicht im Niveau mit data-gewicht an div.task),
+  Lösungsvorschlag (details.sol), section.answers, .sol-only, .merke, .warn, .box, .paper, .lines, .no-pdf, Abgabe, SCORM, PDF-Export,
+  Hell/Dunkel, Lösungssperre (meta loesung-hash), Leeres Arbeitsblatt. Der Schülername kommt aus der Lernplattform (Name-Zelle unverändert).
+  Kopf: <small> über dem Titel = Augenbraue, z. B. "Ethik · 10. Klasse · B2 Nürnberg"; das <span class="ver"></span> darin bleibt leer
+  (Version, trägt build-scorm.py ein, siehe Fachunterricht.html). Schriftfeld-Zellen wie in Fachunterricht.html,
+  Zusatzzelle als <div class="wide"><small>Bezeichnung</small>Wert</div> nach der Name-Zelle. Logo: <img class="logo"> (darf entfallen).
+  ETHIK-Unterrichte: <div class="tb kurz"> ohne die Zellen Beruf, Ausbildungsjahr, Lernfeld · Blockwoche, Hilfsmittel (nur Titel und Name).
+  Bausteine in <main>:
+    <section class="step" data-lesson="Stunde 1 von 3">   Ein Schritt = eine Bildschirmseite. data-lesson erscheint als Label über der Überschrift.
+      <h2>2 · Titel</h2>                                   Überschrift mit Schrittnummer. Die Leiste oben nummeriert selbst.
+      <p class="lead">Einstieg in einem Satz</p>
+      <div class="phasebar" data-form="einzel" data-min="12">Titel der Phase</div>
+           data-form: einzel | partner | gruppe | plenum | wahl (Farbe und Beschriftung). data-min: Minuten, ergibt den Timer (piept am Ende).
+           Optional data-label="Think-Pair-Share" ersetzt die Beschriftung. Aufeinanderfolgende Phasen wechseln Methode oder Sozialform.
+      <div class="card"><span class="tag">Einzelarbeit · Freitext</span> ... Aufgaben ... </div>   Karte mit Etikett
+      <div class="teacher sol-only"><b>Lehrkraft: Hinweise</b> ... </div>
+           nur im Lehrkraft-Modus, nie im PDF. Überschrift mit <b>, NICHT mit <h3> (Überschriften außerhalb von Aufgaben stehen im PDF).
+    </section>
+    <label class="opt"><input type="radio" name="q1"><span>Antwort</span></label>   Auswahl als Zeile (auch checkbox)
+    <div class="lg"><span class="pf pfx-gruppe">Gruppenarbeit</span><span>Erklärung</span></div>   Legende der Arbeitsformen (Überblick)
+    Letzter Schritt: <section class="step result"> mit <div class="card" id="stepResult"></div>. Das Script füllt ihn: bearbeitet/offen je Aufgabe,
+      nach der Abgabe die Bewertung, Knöpfe Abgeben und PDF. Überschrift dort <div class="h2" role="heading" aria-level="2">, damit sie nicht leer im PDF steht.
+  Stile für eigene interaktive Aufgaben (Skill Baue-E-Learning 4a/4b), das Script dazu kommt in einen eigenen Block NACH den Vorlagenblöcken:
+    .fb ok|bad|info (Rückmeldung, mit Klasse no-pdf), .echo (Zitat, z. B. frühere Antwort), .grid2 (zwei Spalten),
+    .marktools mit button.tool[aria-pressed] und span.sent m-h|m-e|m-x (Markieren: Handlung, ethisch wichtig, egal),
+    .pool, .bucket, button.item (Sortieren; .item.sel = ausgewählt), ol.order li (Reihenfolge), .sl (Regler mit label, input range, output),
+    ok/bad (richtig/falsch) und agree/differ (wie Vorschlag/anders, bei Aufgaben ohne richtig oder falsch).
+  Druck: Alle Schritte untereinander, ohne Leiste, Zurück/Weiter, Timer und Ergebnis-Seite.
+-->
+<html lang="de" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="loesung-salt" content="bs-lernpaket|">
+<meta name="loesung-hash" content="">
+<title>[Titel]</title>
+<!-- Fachunterricht.html:head -->
+<script>
+  window.addEventListener('error', function (e) {
+    var b = document.getElementById('page-error');
+    if (b) { b.style.display = 'block'; b.textContent = 'Etwas ist schiefgelaufen. Kopiere diese Meldung für Claude: ' + e.message; }
+  });
+</script>
+<style>
+  :root { --paper:#fbfcfd; --grid:rgba(40,80,120,.07); --ink:#1d2b3a; --ink2:#4d5d6e; --line:#b9c6d3; --panel:#ffffff;
+          --yellow:#f2b705; --yellowSoft:#fff4cc; --red:#c8322f; --redSoft:#fbe6e5; --green:#1f7a4a; --greenSoft:#e2f3ea;
+          --blue:#1f5f99; --blueSoft:#e5eef7; --black:#111111; color-scheme:light; }
+  :root[data-theme="dark"] { color-scheme:dark;   /* Browser passt Formularfelder, Auswahllisten und Scrollbalken an */
+    --paper:#141b22; --grid:rgba(160,190,220,.06); --ink:#e3e9ef; --ink2:#a4b1bf; --line:#34424f; --panel:#1b242d;
+    --yellowSoft:#3a3113; --red:#ef6b66; --redSoft:#3b1f1f; --green:#5cc98f; --greenSoft:#18332a; --blue:#7fb2e5; --blueSoft:#1a2a3a; --black:#e3e9ef; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink);
+         font-family: Barlow, "Segoe UI", Roboto, Arial, sans-serif; font-size:17px; line-height:1.55;
+         background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+         background-size: 20px 20px; }
+  h1, h2, h3 { font-family: "Barlow Condensed", Barlow, "Arial Narrow", sans-serif; line-height:1.15; margin:0 0 .5em; }
+  h2 { font-size:1.9rem; font-weight:700; }
+  h3 { font-size:1.3rem; font-weight:600; margin-top:1.6em; }
+  p { margin:.5em 0 .9em; }
+  a { color:var(--blue); }
+  button, select, input, textarea { font:inherit; color:inherit; }
+  /* Dropdowns und Textfelder überall lesbar (auch in Zusatzmodulen und in der aufgeklappten Liste), in Hell und Dunkel */
+  select, option, optgroup { background-color:var(--panel); color:var(--ink); }
+  textarea, input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]):not([type=submit]):not([type=color]) { background-color:var(--paper); color:var(--ink); }
+  ::placeholder { color:var(--ink2); opacity:1; }
+  :focus-visible { outline:3px solid var(--yellow); outline-offset:2px; }
+  .wrap { max-width:820px; margin:0 auto; padding:0 18px; }
+
+  /* Kopf als Schriftfeld (wie im Beispiel KSV) */
+  .titleblock { margin:22px auto 0; max-width:820px; padding:0 18px; }
+  .tb { border:2px solid var(--ink); display:grid; grid-template-columns:1fr 1fr 1fr; background:var(--panel); }
+  .tb > div { border:1px solid var(--ink); padding:6px 10px; min-width:0; }
+  .tb small { display:block; font-size:.72rem; color:var(--ink2); }
+  .tb .name { grid-column:1/3; grid-row:1/3; }
+  .tb .name h1 { font-size:clamp(1.55rem,4.4vw,2.25rem); margin:.1em 0 0; }
+  .tb .name p { margin:0; color:var(--ink2); }
+  .tb .who { background:var(--yellowSoft); }
+  .tb .wide { grid-column:1/-1; }
+  .tb .who b { display:block; font-size:1.3rem; line-height:1.2; overflow-wrap:anywhere; }
+  /* Version oben rechts im Benennungsfeld (trägt build-scorm.py ein), Datum nur im Druck und im PDF */
+  .tb .ver { float:right; margin-left:1em; font-size:.85em; white-space:nowrap; }
+  .tb .ver:empty { display:none; }
+  @media (max-width:560px) { .tb { grid-template-columns:1fr 1fr; } .tb .name { grid-column:1/3; grid-row:auto; } }
+  /* Variante "kurz" (Ethik): nur Benennung und Name, ohne Beruf, Ausbildungsjahr, Lernfeld · Blockwoche, Hilfsmittel */
+  .tb.kurz .name { grid-row:auto; }
+  @media (max-width:560px) { .tb.kurz .who { grid-column:1/-1; } }
+  .tools { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:14px 0 0; }
+  .tools button { background:var(--panel); border:1px solid var(--line); border-radius:3px; padding:5px 11px; cursor:pointer; font-size:.9rem; }
+  .tools button[aria-pressed="true"] { background:var(--yellowSoft); border-color:var(--yellow); }
+  .tools .info { font-size:.9rem; color:var(--ink2); }
+  .tools .info.bad { color:var(--red); font-weight:600; }
+
+  /* Kapitel, Niveaus, Aufgaben */
+  section.ch { padding:32px 0 18px; border-bottom:1px dashed var(--line); }
+  .chnum { font-family:"Barlow Condensed", sans-serif; font-weight:700; font-size:1rem; background:var(--yellow); color:#1d2b3a; display:inline-block; padding:0 8px; margin-bottom:6px; }
+  .goal { color:var(--ink2); font-size:.95rem; border-left:3px solid var(--line); padding-left:10px; }
+  .lead { color:var(--ink2); }
+  .level { border-left:6px solid var(--red); padding:4px 0 4px 20px; margin:28px 0; }
+  .level.foundation { border-color:var(--blue); }  .level.foundation > h2 { color:var(--blue); }
+  .level.core { border-color:var(--red); }         .level.core > h2 { color:var(--red); }
+  .level.challenge { border-color:var(--black); }  .level.challenge > h2 { color:var(--black); }
+  .task { background:var(--panel); border:1px solid var(--line); border-left:5px solid var(--blue); padding:14px 16px; margin:16px 0; border-radius:2px; }
+  .level.foundation .task { border-left-color:var(--blue); }
+  .level.core .task { border-left-color:var(--red); }
+  .level.challenge .task { border-left-color:var(--black); }
+  .task > .tt { font-weight:700; margin-bottom:6px; display:block; }
+  .task[data-done="1"] > .tt::after, .task[data-done="0"] > .tt::after { font-size:.72rem; font-weight:600; border-radius:9px; padding:0 8px; margin-left:8px; vertical-align:2px; }
+  .task[data-done="1"] > .tt::after { content:"bearbeitet"; background:var(--greenSoft); color:var(--green); border:1px solid var(--green); }
+  .task[data-done="0"] > .tt::after { content:"offen"; background:var(--redSoft); color:var(--red); border:1px solid var(--red); }
+  .task textarea { width:100%; min-height:5.5em; padding:6px; background:var(--paper); border:1px solid var(--ink2); border-radius:3px; resize:vertical; }
+  .task input[type=text], .task input[type=number], .task select { background:var(--paper); border:1px solid var(--ink2); border-radius:3px; padding:3px 6px; max-width:100%; }
+  .merke { background:var(--yellowSoft); border:1px solid var(--yellow); padding:12px 16px; margin:16px 0; border-radius:2px; }
+  .merke b:first-child { display:block; }
+  .warn { background:var(--redSoft); border:1px solid var(--red); padding:12px 16px; margin:16px 0; border-radius:2px; }
+  .box { background:var(--blueSoft); border:1px solid var(--line); border-radius:2px; padding:12px 16px; margin:12px 0; }
+  .hint { font-size:.9rem; color:var(--ink2); }
+  /* Hinweis bei Aufgaben auf Papier: Material bei der Lehrkraft abholen (nicht im Druck und nicht im PDF) */
+  .paper { position:relative; background:var(--blueSoft); border:1px dashed var(--ink2); border-radius:2px; padding:10px 14px 10px 46px; margin:10px 0 14px; }
+  .paper::before { content:"\1F4C4"; position:absolute; left:14px; top:8px; font-size:1.25rem; }
+  ol.tasks > li { margin:0 0 16px; }
+  .lines { height:64px; margin-top:6px; background:repeating-linear-gradient(transparent, transparent 31px, var(--line) 31px, var(--line) 32px); }
+  table { width:100%; border-collapse:collapse; margin:12px 0; font-size:.95rem; }
+  th, td { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+  th { background:var(--blueSoft); font-weight:600; }
+  details { margin:10px 0; }
+  summary { cursor:pointer; font-weight:600; }
+  .answers { border-top:2px dashed var(--line); margin-top:40px; padding-top:8px; }
+  .answers h2 { color:var(--ink2); }
+  footer { padding:30px 0 50px; color:var(--ink2); font-size:.9rem; }
+  #page-error { display:none; max-width:820px; margin:16px auto; background:var(--redSoft); color:var(--red); border:1px solid var(--red); border-radius:4px; padding:12px 16px; }
+  /* Speichern in der Lernplattform fehlgeschlagen: fester Hinweis unten (setzt das Script) */
+  #saveAlarm { position:fixed; left:12px; right:12px; bottom:12px; z-index:90; max-width:820px; margin:0 auto; display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+               background:var(--redSoft); color:var(--red); border:2px solid var(--red); border-radius:4px; padding:10px 14px; box-shadow:0 4px 18px rgba(0,0,0,.3); }
+  #saveAlarm[hidden] { display:none; }
+  /* Ampel (setzt das Script): vorläufiger Stand nach den erreichten Punkten, rechts unten, bleibt beim Scrollen sichtbar.
+     Unter der Speicherwarnung (90) und den Dialogen (100), verdeckt nichts Wichtiges, nimmt keine Klicks an. */
+  #ampel { position:fixed; right:12px; bottom:12px; z-index:80; display:flex; align-items:center; gap:10px; padding:7px 16px 7px 12px;
+           border:1px solid var(--line); border-radius:16px; background:var(--panel); color:var(--ink); font-size:.82rem; font-weight:700;
+           box-shadow:0 1px 5px rgba(0,0,0,.2); opacity:.95; pointer-events:none; }
+  #ampel[hidden] { display:none; }
+  #ampel::before { content:""; flex:none; width:22px; height:22px; border-radius:50%; background:var(--ink2); border:2px solid var(--ink); }
+  #ampel.rot::before { background:var(--red); }
+  #ampel.gelb::before { background:var(--yellow); }
+  #ampel.gruen::before { background:var(--green); }
+  #ampel.stern::before { content:"\2605"; width:auto; height:auto; border:0; border-radius:0; background:none; color:var(--yellow); font-size:1.9rem; line-height:1; text-shadow:0 0 1px var(--ink), 0 0 2px var(--ink); }
+  @media (max-width:600px) { #ampel { right:8px; bottom:8px; gap:7px; padding:4px 11px 4px 8px; font-size:.74rem; }
+    #ampel::before { width:17px; height:17px; } #ampel.stern::before { width:auto; height:auto; font-size:1.5rem; } }
+  #saveAlarm p { margin:0; flex:1 1 300px; }
+
+  /* Phasen: Methode, Sozialform, Zeit. Neutrale Farben (blau/rot/schwarz gehören den Niveaus). */
+  section.phase { margin:30px 0; padding:0 0 6px; border-top:3px solid var(--ink); }
+  .phasehead { padding:10px 0 4px; }
+  .phnum { font-family:"Barlow Condensed", sans-serif; font-weight:700; font-size:1rem; background:var(--ink); color:var(--paper); display:inline-block; padding:0 8px; }
+  .phasehead h2 { margin:.25em 0 .35em; }
+  .phmeta { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px; }
+  .chip { border:1px solid var(--ink2); background:var(--panel); border-radius:12px; padding:1px 11px; font-size:.85rem; font-weight:600; white-space:nowrap; }
+  .chip.s-einzel::before { content:"\25CF\00a0"; }
+  .chip.s-partner::before { content:"\25CF\25CF\00a0"; }
+  .chip.s-gruppe::before { content:"\25CF\25CF\25CF\00a0"; }
+  .chip.s-plenum::before { content:"\25CE\00a0"; }
+  .chip.z::before { content:"\23F1\00a0"; }
+  .phauftrag { color:var(--ink2); border-left:3px solid var(--line); padding-left:10px; margin:6px 0 12px; }
+
+  /* Lösungssperre: Lösungen bleiben verborgen, bis die Lehrkraft das Passwort eingibt.
+     Nach der Abgabe (body.submitted) sehen die Schülerinnen und Schüler die Lösungsvorschläge (details.sol); .answers und .sol-only bleiben für Lehrkräfte. */
+  body:not(.solOpen) .answers, body:not(.solOpen) .sol-only { display:none !important; }
+  body:not(.solOpen):not(.submitted) details.sol > :not(summary) { display:none !important; }
+  body:not(.solOpen):not(.submitted) details.sol > summary::after { content:"\00a0\1F512"; }
+  body:not(.solOpen) #tglSol::before { content:"\1F512\00a0"; }
+  /* Auswertung je Aufgabe (data-ok / data-keys): im Lehrkraft-Modus und nach der Abgabe */
+  body:is(.solOpen, .submitted) .task[data-q] > .tt::before { content:attr(data-q); font-size:.72rem; font-weight:700; border-radius:9px; padding:0 8px; margin-right:8px; vertical-align:2px; border:1px solid; }
+  body:is(.solOpen, .submitted) .task[data-qc="ok"] > .tt::before { background:var(--greenSoft); color:var(--green); }
+  body:is(.solOpen, .submitted) .task[data-qc="part"] > .tt::before { background:var(--yellowSoft); color:var(--ink); border-color:var(--yellow); }
+  body:is(.solOpen, .submitted) .task[data-qc="bad"] > .tt::before { background:var(--redSoft); color:var(--red); }
+  body:is(.solOpen, .submitted) .task[data-qc="none"] > .tt::before { background:var(--panel); color:var(--ink2); }
+  /* Punkte je Aufgabe (setzt das Script): Höchstpunkte, im Lehrkraft-Modus und nach der Abgabe die erreichten */
+  .task[data-pts]::before { content:attr(data-pts); float:right; margin:0 0 4px 12px; font-size:.8rem; font-weight:700; color:var(--ink2); white-space:nowrap; }
+  body:is(.solOpen, .submitted) .task[data-ptsq]::before { content:attr(data-ptsq); color:var(--ink); }
+  /* Abgabe */
+  .tools #subBtn { background:var(--green); color:#fff; border-color:var(--green); font-weight:700; }
+  .tools #subBtn[hidden], .tools #unsubBtn[hidden] { display:none; }
+  .tools #unsubBtn::before { content:"\1F512\00a0"; }
+  .tools .info.res { color:var(--ink); font-weight:700; }
+  body.submitted .task :is(input, textarea, select) { cursor:not-allowed; }
+  .modal { position:fixed; inset:0; z-index:100; background:rgba(15,25,35,.6); display:flex; align-items:center; justify-content:center; padding:18px; overflow:auto; }
+  .modal[hidden] { display:none; }
+  .modalBox { background:var(--panel); border:2px solid var(--ink); max-width:470px; width:100%; padding:22px 24px; box-shadow:0 10px 40px rgba(0,0,0,.35); }
+  .modalBox h2 { margin:.15em 0 .3em; }
+  .modalBox label { font-size:.9rem; font-weight:600; }
+  .modalBox input[type=password] { width:100%; font-size:1.15rem; padding:9px 11px; margin:5px 0 2px; background:var(--paper); border:1px solid var(--ink2); border-radius:3px; }
+  .err { color:var(--red); font-weight:600; min-height:1.4em; margin:2px 0 6px; }
+  .btnrow { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .btn { background:var(--ink); color:var(--paper); border:0; border-radius:3px; padding:7px 14px; cursor:pointer; font-weight:600; }
+  .btn.alt { background:transparent; color:var(--ink); border:1px solid var(--line); }
+  body.modalOpen { overflow:hidden; }
+
+  /* Druck: A4, immer helles Farbschema, Seitenzahlen unten. Kopfzeile (Titel, Name) setzt das Script vor dem Drucken. */
+  @page { size:A4; margin:22mm 16mm 20mm;
+          @bottom-right { content:"Seite " counter(page) " von " counter(pages); font:9pt Arial, sans-serif; color:#555; } }
+  @media print {
+    :root:root:root { --paper:#fbfcfd; --grid:transparent; --ink:#1d2b3a; --ink2:#4d5d6e; --line:#b9c6d3; --panel:#ffffff;
+          --yellowSoft:#fff4cc; --red:#c8322f; --redSoft:#fbe6e5; --green:#1f7a4a; --greenSoft:#e2f3ea; --blue:#1f5f99; --blueSoft:#e5eef7; --black:#111111; color-scheme:light; }
+    body { background:#fff; color:#000; font-size:11.5pt; background-image:none; }
+    .tools, #page-error, #saveAlarm, #ampel, .modal, .paper { display:none !important; }
+    .titleblock { margin:0; padding:0; max-width:none; }
+    .tb .ver[data-datum]::after { content:" · " attr(data-datum); }
+    .wrap { max-width:none; padding:0; }
+    /* Seitenumbrüche: Kurze Aufgaben (.keep, setzt das Script vor dem Drucken) bleiben zusammen. Lange Aufgaben dürfen umbrechen,
+       sonst rutschen sie ganz auf die nächste Seite und lassen eine halb leere Seite zurück. Überschriften bleiben beim folgenden Inhalt. */
+    .task.keep, .merke, .warn, .box, li, tr, img, svg, canvas, figure, textarea, .lines, label { break-inside:avoid; }
+    h2, h3, .tt, .phasehead, .goal, .chnum { break-after:avoid; }
+    .task > :is(p, div, ol, ul):has(+ :is(svg, img, figure, canvas)) { break-after:avoid; }   /* Aufgabentext bleibt bei seiner Abbildung */
+    p { orphans:3; widows:3; }
+    .task > .tt::after, body .task > .tt::before { display:none !important; }
+    /* Nicht bearbeitete Aufgaben: nur Titel und Hinweis, dass hier etwas fehlt */
+    .task[data-done="0"] { border:1px dashed var(--red); border-left:5px solid var(--red); background:var(--redSoft); }
+    .task[data-done="0"] > *:not(.tt) { display:none !important; }
+    .task[data-done="0"]::after { content:"Hier fehlt noch etwas: Diese Aufgabe wurde nicht bearbeitet."; display:block; color:var(--red); font-weight:700; }
+    .answers { break-before:page; border-top:none; }
+    .phasehead { break-inside:avoid; break-after:avoid; }
+    .chip { border-color:#4d5d6e; }
+    /* Leeres Arbeitsblatt (Lehrkraft-Modus): alle Aufgaben ohne Einträge, ohne Lösungen, Schreiblinien statt Textfeldern */
+    body.blankPrint .answers, body.blankPrint .sol-only, body.blankPrint details.sol, body.blankPrint #subNote, body.blankPrint .no-pdf { display:none !important; }
+    body.blankPrint .task textarea { border:0; border-radius:0; resize:none; padding:0; background:repeating-linear-gradient(transparent, transparent 31px, var(--line) 31px, var(--line) 32px); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    body.blankPrint .task :is(input[type=text], input[type=number]) { border:0; border-bottom:1px solid var(--ink); border-radius:0; background:transparent; min-width:9em; }
+    body.blankPrint .pwords { -webkit-print-color-adjust:exact; print-color-adjust:exact; break-inside:avoid; }
+  }
+  /* Leeres Arbeitsblatt (wie die NILS-Druckfassungen): gilt schon auf dem Bildschirm, solange der Druckdialog offen ist,
+     damit die Seitenumbrüche mit den Papierfassungen gemessen werden. Erzeugte Elemente tragen data-blank und werden danach entfernt. */
+  .print-alt, .pmeta { display:none; }
+  body.blankPrint .print-alt { display:block; }
+  body.blankPrint span.print-alt, body.blankPrint b.print-alt { display:inline; }
+  body.blankPrint .screen-only, body.blankPrint .task select, body.blankPrint .task input[data-score] { display:none !important; }
+  body.blankPrint .pmeta { display:flex; gap:8mm; margin:3mm 0 1mm; font-size:10.5pt; }
+  .pmeta span { flex:1; display:flex; gap:2mm; align-items:flex-end; white-space:nowrap; }
+  .pmeta i { flex:1; border-bottom:1px solid var(--ink); height:1.3em; }
+  body.blankPrint #nameOut { display:block; min-height:1.4em; border-bottom:1px solid var(--ink); }
+  body.blankPrint .task :is(input, textarea)::placeholder { color:transparent; }
+  .pblank { display:inline-block; min-width:26mm; height:1.15em; border-bottom:1px solid var(--ink); vertical-align:-.2em; margin:0 .3em; text-align:right; }
+  .pblank .pnr { font-size:.78em; color:var(--ink2); vertical-align:.5em; }
+  .pbox { display:inline-block; border:1px solid var(--ink); background:#fff; min-width:16mm; min-height:1.3em; text-align:right; }
+  .popt { font-size:.82em; color:var(--ink2); }
+  .pwords { font-size:.9em; background:#f1f3f5; border:1px solid var(--line); border-radius:3px; padding:2mm 3mm; margin:.5em 0; }
+  .pwords b { margin-right:.4em; }
+  .pwords span { display:block; }
+  body.blankPrint .task input:is([type=checkbox], [type=radio]) { -webkit-appearance:none; appearance:none; width:1.05em; height:1.05em; border:1.5px solid var(--ink); border-radius:2px; background:#fff; vertical-align:-.15em; margin:0 .4em 0 0; }
+  body.blankPrint .task input[type=radio] { border-radius:50%; }
+  /* Bausteine für Papierfassungen (druckfassung.md): Nummernkasten, leerer Kreis, Schrittliste, Bildtafel */
+  .nbox { display:inline-block; width:10mm; height:7mm; border:1px solid var(--ink); vertical-align:middle; margin-right:3mm; flex:none; }
+  .pcircle { display:inline-block; width:8mm; height:8mm; border:1.5px solid var(--ink); border-radius:50%; background:#fff; vertical-align:middle; }
+  ol.psteps li { margin:0 0 2.5mm; }
+  .pgrid { display:grid; grid-template-columns:repeat(4, 1fr); gap:3mm; }
+  .pfig2 { display:grid; grid-template-columns:1fr 1fr; gap:3mm; }
+  .pgrid figure, .pfig2 figure { margin:0; border:1px solid var(--line); padding:1mm; text-align:center; break-inside:avoid; }
+  .pgrid img, .pfig2 img { width:100%; height:auto; }
+  .pgrid figcaption, .pfig2 figcaption { font-size:8.5pt; }
+  .blank-opts { display:none; }
+</style>
+<style id="nils-schriften"></style>
+<!-- /Fachunterricht.html:head -->
+<!-- Allgemeinbildung.html:stil -->
+<style>
+  /* Layout "Lernschritte": überschreibt nur das Aussehen aus dem Stil oben. Schriften ohne Download (Sora/DM Sans nur, wenn installiert). */
+  :root { color-scheme:light;
+          --paper:#F7F4EC; --grid:transparent; --ink:#1E2433; --ink2:#4A5568; --line:#D9D4C7; --panel:#ffffff;
+          --yellow:#F2A33A; --yellowSoft:#FFF4DC; --red:#B3261E; --redSoft:#FBE7E5; --green:#1F7A4D; --greenSoft:#E3F3EA;
+          --blue:#1f5f99; --blueSoft:#EEF2FA; --black:#111111;
+          --accent:#1B2A4A; --band:#1B2A4A; --onBand:#F7F4EC; --onBand2:#C9D1DE; --amber:#F2A33A; --amberInk:#8A5200;
+          --teal:#2BA3A0; --tealInk:#14706D; --pfInk:#ffffff; --teacherBg:#FFF8E7;
+          --f-einzel:#1B2A4A; --f-partner:#14706D; --f-gruppe:#F2A33A; --f-plenum:#5B3E96; --f-wahl:#4A5568;
+          --b-einzel:#EEF2FA; --b-partner:#E4F3F2; --b-gruppe:#FFF4DC; --b-plenum:#EFEAF8; --b-wahl:#EEEDE8; }
+  :root[data-theme="dark"] { color-scheme:dark;
+          --paper:#111827; --grid:transparent; --ink:#E9E6DD; --ink2:#AAB4C3; --line:#2E3A50; --panel:#1A2336;
+          --yellowSoft:#3A2E16; --red:#EF6B66; --redSoft:#3B1F1F; --green:#5CC98F; --greenSoft:#18332A;
+          --blue:#7FB2E5; --blueSoft:#1C2A42; --black:#E9E6DD;
+          --accent:#C9D6EE; --band:#0B1222; --onBand2:#AFBBD0; --amberInk:#F2B866; --tealInk:#4CC3BF; --pfInk:#0B1222; --teacherBg:#2E2615;
+          --f-einzel:#7D97CC; --f-partner:#2BA3A0; --f-plenum:#A58BDB; --f-wahl:#8E98AA;
+          --b-einzel:#18233A; --b-partner:#132E2E; --b-gruppe:#33291A; --b-plenum:#251E38; --b-wahl:#22252C; }
+  body { font-family:"DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background-image:none; }
+  h1, h2, h3, .h2 { font-family:Sora, "DM Sans", system-ui, "Segoe UI", sans-serif; color:var(--accent); line-height:1.2; }
+  h2, .h2 { font-size:1.75rem; font-weight:800; margin:0 0 6px; }
+  h3 { font-size:1.2rem; font-weight:700; margin:1.2em 0 .5em; }
+  .lead { font-size:1.12rem; color:var(--ink2); margin:0 0 18px; }
+
+  /* Kopf: dunkles Band mit Logo und Titel, darunter Schriftfeld-Zellen und Knöpfe */
+  .titleblock { max-width:none; margin:0; padding:16px max(16px, calc(50% - 440px)) 14px; background:var(--band); color:var(--onBand); }
+  .tb { border:0; background:transparent; gap:8px; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.7fr) minmax(0, 1fr) minmax(0, 1.1fr); }
+  .tb > div { border:1px solid rgba(247,244,236,.22); border-radius:10px; background:rgba(247,244,236,.07); color:var(--onBand); padding:6px 10px; overflow-wrap:anywhere; }
+  .tb small { color:var(--onBand2); font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; }
+  .tb .name { grid-column:1/-1; grid-row:auto; border:0; background:none; padding:0 0 8px; display:grid; grid-template-columns:auto minmax(0, 1fr); column-gap:16px; align-items:center; }
+  .tb .name > :not(.logo) { grid-column:2; }
+  .tb .name .logo { grid-column:1; grid-row:1 / span 3; height:58px; width:auto; background:#F7F4EC; border-radius:10px; padding:5px; }
+  .tb .name h1 { color:var(--onBand); font-size:clamp(1.35rem, 3.6vw, 1.9rem); margin:2px 0 0; }
+  .tb .name p { color:var(--onBand2); margin:2px 0 0; }
+  .tb .who { background:rgba(242,163,58,.16); border-color:var(--amber); }
+  .tb .who b { font-size:1.1rem; }
+  @media (max-width:700px) { .tb { grid-template-columns:repeat(2, minmax(0, 1fr)); } .tb .who { grid-column:1/-1; } }
+  /* Variante "kurz" (Ethik): neben dem Titel nur die Name-Zelle */
+  .tb.kurz { grid-template-columns:minmax(0, 1fr) minmax(0, 15rem); }
+  .tb.kurz .name { grid-column:1; }
+  .tb.kurz .who { align-self:center; }
+  @media (max-width:700px) { .tb.kurz { grid-template-columns:minmax(0, 1fr); } }
+  .titleblock .tools { margin:12px 0 0; }
+  .titleblock .tools button { background:transparent; color:var(--onBand); border:2px solid rgba(247,244,236,.5); border-radius:10px; padding:6px 14px; font-weight:700; min-height:40px; }
+  .titleblock .tools button:hover { border-color:var(--onBand); }
+  .titleblock .tools #pdfBtn { background:var(--amber); border-color:var(--amber); color:#1B2A4A; }
+  .titleblock .tools #subBtn { background:#1F7A4D; border-color:#1F7A4D; color:#fff; }
+  .titleblock .tools button[aria-pressed="true"] { background:rgba(242,163,58,.2); border-color:var(--amber); }
+  .titleblock .tools .info { color:var(--onBand2); }
+  .titleblock .tools .info.bad { color:#FFB4AE; }
+  .titleblock .tools .info.res { color:var(--onBand); }
+
+  /* Schritt-Leiste und Schritte */
+  #stepnav { position:sticky; top:0; z-index:5; background:var(--paper); border-bottom:1px solid var(--line); padding:10px max(16px, calc(50% - 440px)); display:flex; gap:8px; overflow-x:auto; }
+  #stepnav:empty { display:none; }
+  .pill { flex:0 0 auto; min-width:44px; height:44px; border-radius:22px; border:2px solid var(--accent); background:transparent; color:var(--accent); font-weight:700; cursor:pointer; position:relative; padding:0 14px; }
+  .pill.on { background:var(--accent); color:var(--paper); }
+  .pill.done::after { content:""; position:absolute; top:-3px; right:-3px; width:14px; height:14px; border-radius:50%; background:var(--teal); border:2px solid var(--paper); }
+  main.wrap { max-width:880px; padding:22px 16px 60px; }
+  body.stepsOn .step:not(.on) { display:none; }
+  body.printAll .step { display:block !important; }
+  body.printAll .step.result { display:none !important; }
+  .lesson { font-size:.8rem; letter-spacing:.14em; text-transform:uppercase; color:var(--amberInk); font-weight:700; margin-bottom:4px; }
+  .pager { display:flex; justify-content:space-between; gap:10px; margin-top:26px; }
+  .btn { background:var(--amber); color:#1B2A4A; border:2px solid var(--amber); border-radius:10px; padding:8px 18px; font-weight:700; min-height:44px; }
+  .btn:hover { filter:brightness(.95); }
+  .btn.alt { background:transparent; color:var(--ink); border-color:var(--line); }
+  .modalBox { border:1px solid var(--line); border-radius:18px; }
+
+  /* Karten, Aufgaben, Kästen */
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px 22px; margin:18px 0; }
+  .card > :last-child { margin-bottom:0; }
+  .tag { display:inline-block; background:var(--amber); color:#1B2A4A; font-weight:700; font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; border-radius:20px; padding:3px 12px; margin-bottom:10px; }
+  .task { border:1px solid var(--line); border-left:6px solid var(--blue); border-radius:14px; padding:16px 18px; }
+  .card .task { background:var(--paper); }
+  .task > .tt { font-family:Sora, "DM Sans", system-ui, sans-serif; font-size:1.08rem; color:var(--accent); margin-bottom:8px; }
+  .task textarea, .task input[type=text], .task input[type=number], .task select { background:var(--panel); border:2px solid var(--line); border-radius:10px; padding:8px 10px; }
+  .task textarea:focus, .task input:focus, .task select:focus { border-color:var(--accent); }
+  .task input[type=radio], .task input[type=checkbox] { accent-color:var(--accent); width:18px; height:18px; }
+  label.opt { display:flex; gap:10px; align-items:flex-start; padding:6px 0; cursor:pointer; }
+  label.opt input { margin-top:4px; flex:0 0 auto; }
+  .level > h2 { font-size:1.35rem; }
+  .merke, .warn, .box, .paper { border-radius:12px; }
+  .merke { border-color:var(--amber); }
+  th { background:var(--accent); color:var(--paper); }
+  .teacher { border:2px dashed var(--amberInk); background:var(--teacherBg); border-radius:14px; padding:12px 16px; margin:14px 0; font-size:.95rem; }
+  .teacher > b:first-child { display:block; color:var(--amberInk); margin-bottom:4px; }
+  .teacher ul { margin:4px 0 8px; padding-left:20px; }
+
+  /* Phasen: Sozialform, Titel, Minuten und Timer (setzt das Script) */
+  .phasebar { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; border-left:8px solid var(--f-einzel); background:var(--b-einzel); border-radius:12px; padding:10px 14px; margin:22px 0 6px; font-weight:700; }
+  .phasebar .pt { flex:1 1 220px; }
+  .phasebar .pm, .phasebar .ph-time { font-family:Sora, "DM Sans", system-ui, sans-serif; font-weight:800; white-space:nowrap; }
+  .phasebar .ph-time { min-width:72px; color:var(--tealInk); }
+  .phasebar .ph-btn { min-height:36px; padding:4px 12px; font-size:.9rem; }
+  .phasebar.run { box-shadow:0 0 0 3px var(--teal); }
+  .phasebar.over { box-shadow:0 0 0 3px var(--red); animation:phflash .8s 3; }
+  .phasebar.over .ph-time { color:var(--red); }
+  @keyframes phflash { 50% { background:var(--redSoft); } }
+  .pf { font-weight:700; font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; border-radius:20px; padding:3px 12px; color:var(--pfInk); background:var(--f-einzel); white-space:nowrap; }
+  .ph-partner { border-left-color:var(--f-partner); background:var(--b-partner); }
+  .ph-gruppe { border-left-color:var(--f-gruppe); background:var(--b-gruppe); }
+  .ph-plenum { border-left-color:var(--f-plenum); background:var(--b-plenum); }
+  .ph-wahl { border-left-color:var(--f-wahl); background:var(--b-wahl); }
+  .pfx-partner, .ph-partner .pf { background:var(--f-partner); }
+  .pfx-gruppe, .ph-gruppe .pf { background:var(--f-gruppe); color:#1B2A4A; }
+  .pfx-plenum, .ph-plenum .pf { background:var(--f-plenum); }
+  .pfx-wahl, .ph-wahl .pf { background:var(--f-wahl); }
+  .lg { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:8px 0; }
+  .lg .pf { min-width:130px; text-align:center; }
+
+  /* Ergebnis-Seite */
+  .bar { height:16px; border-radius:8px; background:var(--line); overflow:hidden; margin:6px 0 10px; }
+  .bar i { display:block; height:100%; background:var(--teal); }
+  .st-ok { color:var(--green); font-weight:700; }
+  .st-open { color:var(--red); font-weight:700; }
+  .linkbtn { background:none; border:0; padding:0; color:var(--blue); text-decoration:underline; cursor:pointer; text-align:left; }
+  .stepactions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+
+  /* Stile für eigene interaktive Aufgaben (Skill Baue-E-Learning 4a/4b). Nur Aussehen, das Script kommt in einen eigenen Block. */
+  .fb { margin-top:12px; padding:10px 14px; border-radius:10px; font-weight:700; }
+  .fb.ok { background:var(--greenSoft); color:var(--green); }
+  .fb.bad { background:var(--redSoft); color:var(--red); }
+  .fb.info { background:var(--blueSoft); color:var(--ink); font-weight:500; }
+  .fb:empty { display:none; }
+  .echo { background:var(--yellowSoft); border-left:6px solid var(--amber); border-radius:8px; padding:10px 14px; margin:8px 0; white-space:pre-wrap; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:700px) { .grid2 { grid-template-columns:1fr; } }
+  .marktools { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .tool { border:2px solid var(--accent); background:var(--panel); color:var(--accent); border-radius:10px; padding:8px 14px; font-weight:700; cursor:pointer; min-height:44px; }
+  .tool[aria-pressed="true"] { background:var(--accent); color:var(--paper); }
+  .sent { cursor:pointer; border-radius:4px; padding:1px 2px; -webkit-box-decoration-break:clone; box-decoration-break:clone; }
+  .m-h { background:#FFE680; color:#1E2433; }
+  .m-e { background:#BBD7FF; color:#1E2433; }
+  .m-x { text-decoration:line-through; color:var(--ink2); background:var(--line); }
+  .pool, .bucket { border-radius:14px; padding:10px 12px; min-height:90px; }
+  .pool { border:2px solid var(--line); background:var(--panel); margin-bottom:14px; }
+  .bucket { border:2px dashed var(--teal); background:var(--paper); }
+  .item { display:block; width:100%; text-align:left; background:var(--panel); border:2px solid var(--accent); border-radius:12px; padding:8px 12px; margin:6px 0; cursor:grab; }
+  .item.sel { outline:3px solid var(--amber); outline-offset:1px; }
+  ol.order { list-style:none; padding:0; margin:0; counter-reset:o; }
+  ol.order li { counter-increment:o; display:flex; gap:10px; align-items:center; background:var(--panel); border:2px solid var(--accent); border-radius:12px; padding:8px 12px; margin:8px 0; }
+  ol.order li::before { content:counter(o); font-weight:800; color:var(--amberInk); min-width:24px; }
+  ol.order li > span { flex:1; }
+  .item.ok, ol.order li.ok { border-color:var(--green); background:var(--greenSoft); }
+  .item.bad, ol.order li.bad { border-color:var(--red); background:var(--redSoft); }
+  .sent.ok { outline:3px solid var(--green); }
+  .sent.bad { outline:3px solid var(--red); }
+  .agree { outline:3px solid var(--teal); }
+  .differ { outline:3px dashed var(--amberInk); }
+  .sl { display:flex; gap:12px; align-items:center; margin:8px 0; }
+  .sl label { flex:0 0 150px; font-weight:700; }
+  .sl input { flex:1; min-width:0; accent-color:var(--accent); }
+  .sl output { font-weight:800; min-width:28px; text-align:right; }
+
+  @media print {
+    :root:root:root { --accent:#1B2A4A; --band:#ffffff; --onBand:#000000; --onBand2:#4d5d6e; --amber:#F2A33A; --amberInk:#8A5200; --teal:#2BA3A0; --tealInk:#14706D;
+          --pfInk:#ffffff; --teacherBg:#FFF8E7; --f-einzel:#1B2A4A; --f-partner:#14706D; --f-gruppe:#F2A33A; --f-plenum:#5B3E96; --f-wahl:#4A5568;
+          --b-einzel:#EEF2FA; --b-partner:#E4F3F2; --b-gruppe:#FFF4DC; --b-plenum:#EFEAF8; --b-wahl:#EEEDE8; }
+    .titleblock { background:none; color:#000; padding:0; }
+    .tb { gap:0; border:2px solid #1d2b3a; grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .tb > div { border:1px solid #1d2b3a; border-radius:0; background:#fff; color:#000; overflow-wrap:normal; }
+    .tb .who { grid-column:auto; }
+    .tb .name { padding:6px 10px; }
+    .tb .name .logo { height:44px; padding:0; }
+    .tb.kurz { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .tb.kurz .name { grid-column:1/3; }
+    .tb.kurz .who { align-self:stretch; }
+    #stepnav, .pager, .ph-btn, .ph-time, .step.result { display:none !important; }
+    .step { display:block !important; margin-bottom:18px; }
+    .card { border-color:#999; }
+    .phasebar, .pf, .tag, .lesson { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .phasebar { break-inside:avoid; break-after:avoid; box-shadow:none !important; animation:none; }
+    .tag { display:block; width:fit-content; }
+    .tag, .lesson, .lead { break-after:avoid; }
+    .card.keep { break-inside:avoid; }
+    th { background:var(--blueSoft); color:var(--ink); }
+  }
+</style>
+<!-- /Allgemeinbildung.html:stil -->
+</head>
+<body>
+<div id="page-error"></div>
+
+<header class="titleblock">
+  <div class="tb">
+    <div class="name"><img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJ8AAADICAIAAAB58qT4AAAQAElEQVR4Aey8+b9dx1Unutaq2vtMd9A8W54dLM+DEjMlhASaJMahEzuxjYfQEJoHjzwSIDx+hvcDn8/7A4AOhtd0w+fRCaFpxu6EpOnEQ+x4niJ5tjVLdz7D3rtqrf7us6+O75WuZCXRVaSrU5+11161al7fWlW161xJbBhWrgWEhmHlWmCI7srFlmiI7hDdlWyBlTy2oe8O0V3JFljJYxv67hDdlWyBxWNbWbGh764sPBePZojuYnusrNgQ3ZWF5+LRDNFdbI+VFRuiu7LwXDyaIbqL7bGyYkN0Vxaei0fzA0AXP6cu7sMwtlwW+P7RPdWeDUBl5lMtc8r5BpWfconzIuOZQ5e5BHWZYGAuK68QW6YmqsrPLb7s6MLWf/u3f/vpT3/67rvvvuuuu+655x5wEKKnhe7sB1T1iX743Oc+95WvfOXcwmD5ervs6DLz1NTU66+//vLLL7/yyisvvfQSOAjR00Kvvvrqa6+9hmrRxK5du958883Jycnls9e5VfOyowvfVVXwEAK4qkKIpzWgQlSLKqv6AQAE8CEtO7rwXVh5YHpEK9ODny5C/RVVGFfykMMCy44uIASizjk0BhkwIwoB0dNFABWEaitCtRDAh7Ts6MLQIMAJDgLM4AOS0xGqOgHwEM5jLLDs6KI9QAte0UJ5oIHy+6SqqrOCn02dOEPoAjyMGvx4gv77p8Fi8P1XtZJqOBPoVvYCrhAAA/gyUdXEMlV+LlZ75tAdWGcA8EAYJA2F02uBHwC6Aw8bCKd3SMPaBhY4o+jCWUFou+IQhrSsFjhz6MJTK8J4IIAPabktcObQHfrrcmN5fP1nDt3j2x5qltsCZwO6yz3G87f+IborGfshukN0V7IFVvLYhr47RHclW2Alj23ou0N0V7IFVvLYhr579qF7+no0RPf02fLsq2mI7tmHyenr0RDd02fLs6+mIbpnHyanr0dDdE+fLc++mobonn2YnL4eDdE9fbY8+2oaonv2YXL6erQy0D199lhZNQ3RXVl4Lh7NEN3F9lhZsSG6KwvPxaMZorvYHisrdj6i+45/K19lqPgPEO5T6cDJ85yP6L7j380jA6wGfgagRUNopeIQQAN5YQcGSmRYSAvzLNRX8vmIbjXyisNqIMgVh3CGqYKn4lXTC+VKM+CDTg6EQdKSwvmOLkwJgrHAYSAIIAhVFMIZoKrFJRsaJFX9qThyDgTIgzyQ5+no63xHt7LDwFgQQJXyJFarMpwuXrVYNVfxk9e8MA/kqviSRYbovm0WWKqKVMJJrFZlWw6+sFF0Y2F00FylRCo0kCsB8vE0RPdtmxw6dGh2drYy1oEDByCfAZqZmZmbm6s4mqtaR58gQI9u7N+/HxxJ+/fvh77iEIArOGggQD6Gzl9033rrrT/8wz/8lV/5lbv64c477/zsZz/7q7/6q/fcc8/P//zP/9Zv/db/0Q/IsKyEFn/5l38ZTaEV8HvvvRetow/33XcfktCN3/7t3/7c5z736U9/+jd/8zehBP+DP/iDb3/72xWQmASVsCQ/f9HN8xwAv/jii88888yz/QDh6aef7ovPPvXUU5BBUA6oSjrt/LnnnkMTaAuNgirhiSeeePLJJ6soWnzhhReQB0poXn31VbhyBedJHBcZzl90nXML/ys0vzg45xYrPDQL858uGfCgKlR+THNJkkADfZUBeeCmIAggKAEeCBrwE9F5jS7Ml/QDBBBMCYIAghr8eEKG00uAqqoQbaHRYwjKiqBHNshpmoKjVIXoAOYqegw/f9Gt7IK5X5H2Q+yHvrg0qzKfRg48Tl4bMoCQBx2uCDK6CQ79yem8Q/d4o/RNVrKFljpJtjLrMjxoHY2ehCp/xaRDnqp9FDk5nXfowi7HWATGggb6iiCDIIOfPYROYmVGf9CxiiC/I5136C60CMwEq1UayKBK/kFxdKCi4zuAflZ0ogzHF4HmvEYX4wdhras4zAfhDBPQGrSIDlQ00CB1QEiCHhwEYSEdr6lSh+hStZ9V5qg4DFoJZ4CfCJiq6eNToQFVqQN+og6fv+ieyCIDk509AuAEVf1Bt0GV/I78/EX3JKYZmPIkec5Y0vfTmfMaXTgBaIDT92PHQSWnV0D3QN9znec1ut+z1c5wQQAMqhrFFKyoip6cf+/onrzecyIVJgOdE11FJ6uuVhzRU6HzGt1TMdA5nWeI7jkN3zt0fojuOxjonE4eontOw/cOnT9/0f2ujifvYMWzNfn8RXeAyADmgTBIOteFIbrnOoIn6/95jS6cFTQwz0J5oDxl4WzMeF6juxCQlQctRjdEF0ZYsTREdx7ahb6Li9xKu1BZaU7AYUbQosRBJUe1elT4bt+DgnJcne9Q1bF9eofsKy55gF9luCpacWhApzZiAABalLeqZIHqGFNXUWUj0IJslVilHiPrcXVWGU7IF9ZywkwrOGGAn2ppO3AMFkasaJAK5UI6kb7KM0gdCH19aWoAybRoHhgTqJ9hIUOeMv9CFWT0anGd0J2MlqjiZNlXXBrshTHBZCJSySQMc0dT8HkNciymE+kX5zomVgKGOo1gc6V5jCEfk62KovUqT8nNInpIZUERcgx3ny9eZT4hP1HtJyywMhL6xiqHAgH+CgJgJblyb6uiwJuAtBnyIQkcmSuC3Lc13pX1SzU0Il6hIEwUx1wSlMh0lMo0YyBX+SuMjwY8mwdmQmikbAszoKyAI3ISK3EsORGbUBQBJ6EyaMlO+lT5TpplJSbCkINhQQaQwCfPcw0R0EIGhRAgD7KJeOeSo+RQBISyIDgi8quW+SGQiWE/7VO/OIxcUT+2gHGJJhHwNEe0AGa4JkO7ICtJma1UsCMu36fwyCnkWa4sZ0O9AAPwACeQ6wcvwNA7FpAQEktTIhuQHlCMFuP8PCAuN2xX5hYiRT3QgJQM+BhBWQ6UjdhKuS9ALpV4DA8cuGxEURzEgJaMy8JAFEWYTNAPZOyTRYp9AUn994nZO+c4cdlzNQVQVV2vTIYoYANaDhBxaeZKw/PBqjeKQF9RJYODSg2V+2Llu6hDBJMCqAH1kiPPgNgIDTBpSQY4kcL9eRBNcpPCJBiRIZcJEWAHwB4C8mFGGKkie7m2V2VLNRFkUCUv4qhiUfx8iAAtDBNwAhgIFYcAjCuqNJWsCosqNFYebYAi/EYN/kNq0My7EfDANknMDtXC3JGFShgCcUCUTXEWskWoaJXBGBUa8EMRIybzyMaWCjlvOAV4b4lDWjSiwOVm3Icf06MEFb0GCZ4l6YQJS+ZeSUrAcBS/8o1dNssycOjBoYJQEaIgaPoUYixA8NSohSrWZ0CuZgpHAwDAEkuyGJVuykw0b+FIBZKYFEcjwmQoCQA7mJRLPBWCskRMC/JGxNheCecyAYgOxy5JDEkuUH+KGNPiMN/KYuXRto/Rng9RZq7X66Ojo+Pj4xVvtVqQV42Nj4+OgSoBvKJWqzE2NoKco2OtkdFmC69Wa2RkZHx8HDxJEmDmhFAts5EVQMpwzmLApixmJOCOABGXCAFAEuOgTIWEwDE6M44AU0qvVTHnVFz0TAkDaUXGINp3dDYWBUbWDxBORHKihBWvv+CCC6644opbbrnlvf3wvve97yd/8if74jyDBoRIxX/iJ35iIL+/DD8O9t73IvEnbr5559atW0UEvs4MPI2dGOAkx2xG8O/AFEkZbg1EWNkxDAyPN3wemSAC/KEmJYoskTzO32RAxxGO0ziEE3BVRZ1sKBnLJBRDaygLxdKE8ksnrGAt7IvRwTC33Xbb5z//+d/5nd/53d/93d/7vd/7/d//ffDf+vxv/97/8/u//uu//mu/9mvgn0f4v3/nt3/n85/5zG98ph/+r8989v/8tc8g6Td+4zc++9nPItvHP/6xa665Bp5s8L5oqrW8cNHgjECGhb1w6njUU8MsjZQQ19Ql6j0mhHBsEHuC6wI/KlxPecJ4jqln1jXtBmpH6SSpMQN7U8MOUHdWIwTGZMDrhHQ+osu8aL5jscWaPLDQ2NgY5PUbN2zYtBF8ZGwUCy/ybCjDJmhBGzdu3rh+y7q1m0Dr121eNbaqXk+J4LoFpo4ZOVcTajlpEsGJQ6Ss0CzHBzTVmFapjRVxJBStmDWSokmFSNHkOObjeKqtxGrOJKgoFmbnMA8ySXrGOT7DSm83lkIYuzi6+Q7wvUMyKliRBAwWjouZF0aPkY/JfEwqolgxOTiKKQM8nIAsYY3egpmSwufMPKnLg89iMqfSZs4cdby0U+k6P0syI9RxMfoi+EJVOdcYXJYl3SLJy/qcV07YJS5pkKRY3mPICJ6Mtk9KctLUFZvIvDScBr87OuiBzLx05qMZSUxKFM0cmyN87qaJAZAeUcew6WLXZMLxqOdiT1wwb4qMwhGNBaUg2Eo1ShFdZCBXTgypoZrMU7cWem4m0AxxjuZYUhHcmTW9axGJkkF5EpKTpJ2HScw8GDXz2/JAuVhQ6jsQkyNxpZOiSAkAjkBGlpDVYH7hJmmDtZZwjaOPJhE+HRTunmqoxSCREwoJd9TahsM2UslH9gXlAJUtM8wdzDUWK4LmEQdtYFzWbP0eQqKlgyytHmpPxQJwWRByWnkggvGJA0lUgdV9cAlRS3SVaSp54nOuFZYG9bHTcN3xJFvfmF3f7K0dyVa3CtDaZm9Ns7uqHkeT3NOsxC5HtVx8TFMIUSyqRiCd5dKObqYEFq5OhbGeyIeH6AKc75VgYNjXCA4ZJVOB3ZXYqXSDacG1gHXanITc5e00HhkJR1b7g9tGJy9eNXXV1pn3XNp79xXZey7PfuyHih+5Um+5srnz8uZ1F/COTcW2kbC+FjaqW5PFJO9KUdRBRHXB8TvgCK3WqTqNr2HCXEJPqvhiPkR3sT1OPablgoiHmaLESN2CQhTKbVoJZ+FeO53tJlOZO2hyoN58c/vGA9dcOfnjN2cfel/2sQ+GO36KP/aT+Sc+QHf9tNz9M3LPbckdtxY/9zMzP/fT3Y99sLjnI+nP/Wjz/VcWO7bObV3dHalNOz6oeVclYRpP4ipH66qelgs2lft2FT2GD9E9xiCnHJXSX2BXIp31oVNLMpf2zIWaKywTLVLr1Xh2rP7WxRe/+b73Zbf/2/TO25P7f5Y//v7sp26e/uEdkzsuPXLxpn3bx97aUn9la/rCRaMvXLP55Z2XvPLD1772oZ1v3PlTr//SxyZ+9Y65X/qwfvg9sv3CKV/fx2E6oaRu6yxfQ5hZRMzoApx3aRyX1tIwvJMF4DTIoriKMpbonKYuNNO82bBaQ+dqc3vWh8kr12fvu3b8Az+y+f03r373JfUrxnScZtJ8hjXv5VnRlV7mgrpyZe9J6JF12TrOuh4HrEbQ8XrYvo5uupx++keaP/eBi378PWu2bcio92bWfUPCQUCKDoBKfEkhHE9DdI+3ySlpmBj5hJiJ0+hdz+pZujq0RmeyVfnBHWunf2xH7yM3137murH3X9rY0QxrdLJZzDYBA3bGUgAAEABJREFUZmQrRDOHzbkbBPtnxxG+fOcSNytJh+u45Qh5jXpJo9dsRd+qTW9cf+Tqyzr/5ib+yA83f/Rav23tTCM9wn1Eq0lGJOjM8bS09vh8Z6fmB9krPto4q8ujhCQNvpHHkezwZRvtvTc2f+IGueXS8EMbOlt4Zr3N1bO81sOBmnEDKQVhb2bmwnFXXCehtrfgXeHSgpJo+IJqsqZqwZnWLI5Yb6M/tGPD7Pt36I/dkFx5cd4YOxJ7u9ADJqYTQIvUIbowwvdM1XooziVOqOHaqT+yaU1n51WjN11be9fFtnZ8ouEOJXSEY9uVNxUJB6PCyCwVR85pghMZ5eX9onIMHAtHAaCry4LLc8mV2kbqQl4PvdE4sa01ffW27MItsy33at7ZTdlLALe//1ZDqPpTypVSSnH4fI8WgPVKgxqrcJf9gXWb9l53k3v3jeNbNzZaNeDZCdqOUmhNcqKMtGvOyCfCZridTL1SauINH0+uEalhuXDO0iNfRN+N0ulRgRtqyn2duU74aeLI+sb0WPIWt789O/Gwzb6o2UuMzlt5xrLSiRUxIi2VVMb70SH7ri1QelxlwFB0xA6vW3/g+ht7P/r+xpbNhclslmUqjoFr6mcd95oU6uprxon1bR8t79SiNmM2Gm0kUk0tNatR8NR1NmfUjfBxTplb0UZ7XM+5EVyspVkt7C8mni32Pzg38Qi1X0HHMb24fOHBhBvwIbowxfdGJtg4URRrYCKtTWvSq69tvPt9xbYLD8ZsmrvaSEZMal1O5jRkoqFGWueAjVUCaXQa6zFv9rTZsdGM64VxcFp4zjUJlgBpkpp47x326rZkU2wzIpnUsHw3Xdbiydh+eurgw9nEc9R+k0lIjbmacDQIMpCGwndlAayFZpH6a+DG5uEbthXvfVf9iuZI7Qgwa49qTPNQM6tHTjVphtRnyGtKlseQcd7jwurGtRi95GIzXucSmauns6l0RAtSiZTE2MgtLTOmNUudh+v7iIYLbip5myzy5ycmHu7MPm9mJEY0P+H6AwngQ3RhhO+F4LjMDgYt8j0j7rWN4wfXt1wzuCb8ixLPZHFWQuFVW4ILDk89/CyI7PjVVrHkFuI6Jj3hInFZ6ou0kScuT6yX2lzTOk3j1CeU+sC1IKlyrQDiOEMrCSATidw0JzbVm3pmZuLRbOopVI3ps2AkHjKygg/pu7eAHS2SHeT8oMRppp7C/syC87HriVfcNqsBQBbLPX5gUGjymITgldI0+HqXkiAjkceijUUaVRohN+JdQ4CpBlUlDoTvJul4yXC+jrGggMtroCbefEMLzvd2J54InWdD7xk4PAA2g3cTODqIfEd7OXx/VxaAdxKMOBvmdhWzr3A+4SizGLD2ku9aUpg4yDHW2ISsEMNh2Ih9lEZRG5n1Y9NhzdTk5oMTa/dPbDoysW56Zm1ndnXWWxXCmFArCo5REYu2CjDGsk6OijQS6vIFuSBpwSPRUtMw82qv/bR137DiVXgw42qSqOIrAV3MUzoaFspHdcv1ZiItXunOvJx13mA9UpNAGrD/qRHQKAAue2cJKzuVBOdnwU1GsxvqhzqtN/bXn3tdHt8lDz9Ze/gxeuxxfvKp+OyLtvsl/8be1lRnVdSx6HFI5iARK7lQVDWmiMEYszMxA8B+lGNN92WTz+fTuyxMIpUwARhvATvn0QWczBgIQcCYmEsZwvKTku4rurtsdrd1v8N2UKgjxD0VvJQ1Ag/y8OAoJD5w3ec0Pt3d8ObUuqd2x688OvFP35z8+3/tfPlrh/7ua5N/9y9T/+2fD/zzf9/33792+KsPTj37ku6Zbk7HRi9NiroLQoGxvCdqUTQS5o0Yhzppyyu3tK2zb2XTbxWdCaN5O0CABQTPiiHDlnPGBmNCur97+KWi/aqLbWyKdXgT4wbRiLEuCsB1sSbKEd1yHHh8rrPxhd2jX3/Q/ePXi//xWO9bu/i1ybHp7IKZfPtUvvZId8vr0+uef2Pdw9/2//DVuX/51vRLBxptXZ0ljR4xAO4RdmKn4rDxZi7JSDIcySzWXM/le4vegZC3ud84bIA5DmOc8+jCkhgMCIKIgEM+E8SUTR+cm3rNwqEm59gCAWJCCRN+YmclC8RwNGVh53G4PtzTbz195F/+tfvgI61X3rhwOru867fP+dqck47TtnOzPp2Oq6eKzfvnLnn+lY3feJQefFxf3lPr9FrsG7nWgjKOWeVi4FxMCk1i4XriCsY+zNN5961sbk/RfgvdKIdfwqznPLrlSI4uR5DPJMCa7Ul6rzTiBGm7axFA5tSJEllNiHGTnEgh+M4V62jrpTfCE8/OvfSmTnTrBa3C2Tj6pFMvurVe+adxTesmWoiYS3y6LqYXHuqs+9YLvQefbr+yn6OreV/u3GQ1VTPCtAkivURwqwWFo1Ak2Z5abzdnr83PbyYj7MC0EgKGhDmriqFjUGdoRNw5mBYHXZgLVA9uNGIjjBxNsCNKhFMFwErc7lH3QNF4eld49XWe7iYhkeCMJRrH4DlLfObTAHfEp3GaEWfs8sz5tq47NLtu1+vupb083WtKosLqqG6aiKmz4ChLsUZAVE/R13uTtew1Z0f6g9c+F+m/zmEGXAeEYaieKYBnD0p3SoqZPObKwTg4McYVghdliiwFu8zHXhLmqP7m4frze9zBXqsnHKRDtTnizFEu6tl8EiWJ3gl5iSRd47lI3eh8EcYOTTRefy0cOpgXkXBFzaZEZGiAzZGRC4HELCLClocwEXQaGSpiOvd9t3JZjEdkftOFBgTNspLGw0UxDWixShLaFsbNROlEWljM0DQ7LKCUE88UfteeuGdfM6NV1BCX5DhdJxrSAveUvpVLGhIONbNG/yMqY55WNxs4FDIyOdfcvy85fNAMl9QS4NYOd5GGtT9RcmpJEIqkksYovdwy/CRFCAanVVsB6GIsIDMrLSzinIMrQ3OK9I7ZUDPyVBwCCL5S8mKy6E1jfXWK3bIQp/Ae4TxVramrqwmxCAVx7cL2782nZpAXF5QCt8bGSRq9Sj1SEskrMTCCQutCGiyPbtbSEB33QjLbqc3ONaioOUbOTCyKSMJilBZi8GYUSdAJuHRoWyjQN1QHZHF+ljJy7j+wvvYDhoLBMzOE00IMIy2oyIwYXkmklrWzXM2TJWSpZji6eiy7woYDkAXmqLA5KGu3pibxg5DD7wDOEkdM2kyswZgGqqzG3BU1FxsujIgliRjTrEg7l9mc8NkzknUaoXCOACrK5oy6oyuMCyMlM+GIHnIgCmaliFhJTELncsA4gWsFZ4wR+GI04FBC+D5IAV9V3GDqElGzfpz706aIe8pFQtYV6eq8VevVQxgtOs282yiKFn7bI62Pcm290dZevnZi1s/0QhAqwlwsCs1ribYkjKSauIjfAooCO6zLDAelrOGzkXrRTKITV0gto7rmpNOdPM8CJhSROmFWjJQKKoxVsSIQVOgWMztQv5tgGAKd2+gCSBHc1MFoRTk454qiOHTo0KOPPvryyy/v2rXrhRdeeP7UwnPPPfP888/2CQVexPP8C08//8JTL7z49HMvPP7sc995/vndzz2769nnH33hpa+88spTz+3etXe6fSgb29vetq936VtzW/f1tuzN1+9pb9rb3nCwu+Zge9XBubWHpjcfmB6dLZpUT6yWYocGAhyjREehLlrLeTSzZi4NI/yglGGhTjRNNLHIGBoGZY4kTSRJgD7QhYZN4K5C8NuIbdzEKABgKGtMaTULiQQIlw9e5y7BTTHgBOuZlGFiYuKb3/zmX/zFX/zRH/3RH//xH3/hC1944IEH/rQfHjhp+NM//f+Q/icP/Ic/eeCPQA8g/Ml/fOBP/vwLX/hPf/anf/mnD/zFA1/4zw888Gd/9id//sB/+Avwv/ri3/zjvzyF68N//FrnH75a/NPXwt9/de4fvxL+5qu9v/9a/t++fvgfvr73H76x738+NP387mxqzkX8nCsNlhqbYdM04gh8XCBXsBQpdxPuMWWGTx/2bJRIQSHiiFZzfrRZqyWkGoArWWIYsHgvjilBPeaMSVEtwXcpWQjluY0u8MRgmBm88uNut/vqq68+9thjDz744EMPPfRwP0AA9cWTsLfz9zN96+GHHnv4oSceeejbD33z6YceeuThR7758Lfwevxb/+vZR77xwmMPv/LUk9NPPKlPPG6PPVE88m351uONhx9PH3m89o0n/cNPxm8+Hb71VHz4mXz3bmt3auxaqikcknBulqZ6HJoydW1sul56ntr4OI5Yepx0cZ6WTGlO8x4mRc37ehrTJPeuBB3oRqpHAqJeTCLAFnMqJGwuZWzNsEWfjOjcRrdy3P5YcLowESxQ3Ov1ZmdnZ2ZmZmdn2+02+Nzc3MxMGYV8IpqZ6SBpbm62T3MoOjs7NzuD8ijd7rSn23OT7bnpztxMZ6aL95HpeGCifnCmsXeideDQ6gMTq/ZNrjkwsW7fxNq3Jtbsmd6E3/X2TI0dmWpMzbby0FAgUfaRxZkpvm2MJKLnfZ/LjHIs1uo7edLp+aBeiiCJWSvpjjbnxkYL7zJOKTIZrjTgxnB9DRRIcJJSV0SK8OMEd5ZN1IkFvM+RWr3PWa6qVd+5PEniuKHOOe99kiRpmoKDvPfgFfkThCRx/QxpkqSJryVl1Ccp+zRBdfUkb/qsmVC9ltTqias1yTW7nATXUtdQh59jRwsZ6SXjPbduzq9uy/qu2xx4XebWRNfMuabmiMRxYAosgdTQbWUSY9YUn7PEPnoN6URMemxrJF/NQUYanY2r22tX5yZFZFxcMHFQy0kxGUzATSOCSpDR6EfZt+hoYDr30QWoIIwIHL4Lwaw0HHhF0ICQCg6CcBIik5JKs4hRNMojA4JI5IEHx4KiRsAgdfVjMW1mPoQkD41OUSt6Ncq9deoxNKTjXRdrrODUC4zEGBujMhsp1tIC3QBFJjYJzpQdoNUSfoqGw7OF7qo0rm2RX91sr187t2p1zqK5xWCYFplxJEFR9kze2DEXsY5Z5dwF4kdRM5H0+dFXFTklfrZmApboGi8IiIKgP56gB1V6CH3CGlA6hxkWS6QAg1KDw63h6yPipDMScfeAfU5hUjU/R8KUtGMyFXyvSNrq24WfLtLZzLWDz3LfC75nvqtJm3yeOkHX4KrKahzIZYAVzbAmXqV0XxsNVo+SdgJ22HWcjTWKbPu4XLFFVo9mkQsmRlEqhRCkR65wYiIeEye6xPxmSbawjPTHMs/mQZ6PnZsv2Ghhx2HEiqAcJFWaAUfSgJCnTyWoAyVRCQbDQyQXDkYScdFro4qTkcGrnUTkn6XoObbUEuLEoQxJLfgaslKscSehKScTCc2kPBdlzigHCQUynH49kVfHTr2Qo5CIlpeRkRP2NeclLaYvXFPsvESu2OYSzJ5CewEVs5mKM0o9CyYB417Sqyc/lqSbubFd0/VHh6AQBM8KIzsaMC4Rcf0gRwNiR8X5JGiWpL2jqTUAABAASURBVCobu/JN3tRFk0iO5nGnusQxiiMgjnUpsDU3akW9HqRWxLQwUIJzsRYMYtwgdpnmTLvMhRnOB4FIxSgAbRPjFOtGQoWzIqVQZPtHWkcuvbB38XYbH+14y2Jgbz4h8T4Rp+RCJBQGCTnvklqjcUHSvMAlW4yQUA59/sFr5REgxqDgrOCQB6SqA3mhcEy2KqmvjEqmVCj3onRAsJ5hiSw3UWUrycH0MTqL5RywkKimUVJtpXFVPazy2vSWJpQIJcw+MvCI6gOmixjqzozNce6kcAScm2UmPrB9Y7jqktbWddQE9Lm3ohbw467DgKwwwg6MDVwMzqkIVPM2gtuxOmP1JqV5IiTTigzwOFgCI6+oQuskHNkWplY2gYa4dDKjnuG3OQrEgBE/0nVIus53HfeSkrLUcEgKhO8Ti/2ywlQnHSFbxTpuYVytpZoylXslERl+AqKoWAxYqZwrPUIUl8/Z6jQUm1YfvvoKvny7W9PIXF64HJCvDgTvVfWYRl7y1OcJmxj3LMRGa2Oyaq2rjxKjajQt5TyhlYsuLDggwDyQFwrQg45qtC9U013NIqA1uJU6Uoa34DgjXB61jMqlNcbCAAzKGJNJWQ+WXGjEiBRPVFKlANEAA35194aPUhK2pupotNSMlJwRYT6w4SiOA7kkUZo8t+PyeO0Ov2FVFzfRZSmHLB7NsXhS80o+OKwA2LJ7nBbJ9trYlenINkrGUFsJMCpm9IyqwZTSOf2UxiWqOC0Ix2sWJFIfv9IgfWVlikAwTWkW31dqmYeJKWVLiICNCJwHhyDAQ8jDWoKLbycUBMZOWaKoikaXq++SZCZw60hcMBvhyI3zVkypqHF0oXTlptc0WD1npyQNN7tl1dzOq93WLXNJY67QED0H3w5ull0kw2euwyxKSEIaOz7O2SoauyFddROnFzneWLbQ7zdGwUQyL5/jL2CAEVQcwoCO1wySTiDAICAkVq5MzI44kHnSFmmNSozr7DyRZ5xyKwMaR+4TweNjIMgqYuqAhkWKhRQquZYrMDERMBBib84BabJyBpQZ04Q7I429O3ck118s436vl2mpdczFKCb43OKuKo5jKtE5toLjNHG7scavv4GaVyTJVYTAZf1U9koQKx+8hnQyC9giKzGV8NC8UgAO3BdE/YDVgkXZ5fgEwkEMiKoUQQyuGQRebMQZy6yTGefbieBEHUm7FIILndUjEzddM/vem9ymluBTh7GKRDbVgJVAFEu04VM7YvPGqs74UGvXElt12djmG1xje7/xY9mifh+bOIyXFtCSkcLMJa6VYH0dAIYrW82sbjjykBgbAVqJBjclRJFbFYdk1n4BJYtA1AMa6bLL1LpIxQbc5HxD69C1l83++E6/bUOPspkR7wBwlpsFbMbklJwpyqsJScw5ZtKw+gX1NVdz88JUtvbrP5YN0T3WIieMzyNE1BfgWCAiM+5jCThZI1NgKwBDCS8OrozkgI0XmSRRSUQkxAzuKz7T8vzbcKHOPNYad5dfVrvx6vTira4mXeE5AGk2mujqtBipxXpCdVYf1aH+HKdkjmltU2v1ztF116aygwA5LRGG6C5hlONUpZVsobYEuHJHaB1hnzMPLyRiMfgsEak5NWHEHJsjcZGkcKziJDVKQ5BItSw4+CNupy7c5Hdemlyz3bWcFvhVwGFlL4rCCzci7rTNOxNTIKvmUI1oukZGLhhf++5W63I0Vk24Ulj8yOLoMHYyCwBgUJXDmECQASAbs4kDclri6foY42rLRU00eLUkUt18EhiCU6+hrnF1YY1CsB0f3Lp+9vqLwjUXhE0NxXkYeKuxMnNimRSFcxJrvoOyIa1bFArJiI1elK57d23seufWMzpBS+O4tLbMP3wWWWBgKLHKOUnhoP0sSBKYGAD3uRNNCF8+KkbRSXCmCUBR3GE5ZzGSdcnn3CROHE9vWXv4+ndNXH9Fd/Pa6ELP512nPSeUpJ5cz7gHZ3ahrKFJFK0ILuklG2X0qsbY9drYRG47GZ0ooGcnShrqSwvw27Yb2AoCCB9FgiWRqQDNI40PJyzRVP7Zqwl+fU8iU/Tt6GdFeuxjV3LcNZtrJLFey7ubmkd27shvuap98YZeiqtjK7CekzBWAcbFpdMaa63ouqztfUfZZewPttPD+frcX15rXdyQS9FFw5zCaymSpZRnQmf2ttnORHvfaxuLbVeZC16L6gKREucmmQl4jpwGty631US4JpaKCBQ49ZIFo8K4E6kW/bhSw1HRcgeuuaz9o9fmV2+bWVObTmzauZAKJ+SdEoXIjG/tIBp8uU5brMVubO3an+w+MHao2MbpDZUFuXyhALp0LFXdPVa7fHH0uKp8IFTRc5DDdDgVg1e+Y9grjeHGninBKQon5HJQHFgM23G0kONDhke9rksLN+6nrtja/uBN8arNxWrBmjwj1ksc1nRvIQ2ZxUxjkWvoCS65qCiiRL/uubeSrz/Re/Q7tX2T60zQGI7sRrw0tGgdnQM/c1S67JlrbblbClR+DpnBQ8ufBtFcKRogxkdLzHI1nKsKksA148S5hsO229436vb90IVzP/me+qXb6800FoEzg697ihp7gSJ5STzVawHO7zIvc7Vmx29/+o3Wvz5ir7zenOk2oqWMSzAjKiEGiCA6PiytPT7fcmiYq1m/HHWfgTqVSlCZjI82Bo0SjkDWM5ycBPcVORLZxkgbRvjxoMk6PZa8denG/TdcGa66rLam6U3Tgr1SNOrVTBw1KDS1wO9+qaM0M+7W/EzaemOSHn08e3F3Oj21xulY4oiwbDMxnSycaXQNE52I+4HO7QDTCWN9JGIDzcukADTxPnWuXLdNsWk6CjWNrtDM2eRFa9o3XBquu9htbHQSoqDBsLRyVMZS61hiKqV1DJceRFSzrnf7e7XHd3efeJEPz6zpZQ22xJUXk/3JhDzY/ku+xIMuLqE9vaqys/2nqhZiJZz7XJ0RPmfhgBD6GCumLyAXA0wCVD11vYgXhw9ZZ73N472bLqntvKJ18bqiRe2Y9YL5ItEspcLXModyhfMzXtqBNTjLfTrRoedfn37omeL1ifFIq6MIS+4xFQjYgchObMcy+cSppzmF+eQLyWlubrmrA5xUfgLBAwlbrXBBHODCbE4KYYpOc9OMQ8cTe+2sH2lfdWnthqtH3rUtHavndQlNUpczR/x2W8/NdTVEFzjJAnWjj7MJ728nL7yqjz3Re+mtRhbXtL1Zoxt8plYMRsclzLRkOKPoogfMKwRgttJ0SnDaxCw1nKqMxQgAG+WZdgvcPKSJS5PIeZHvHWseueIyvvba5gUX5kl9Mg+TQLbGIw0bc/m4j4lyHinXKBRH1SedevNgsfrxV+oPPtHc/fLqTl5YOqeSFRG32MG0S2iLEBTCvIjYYiq7uFgzjC1tAXgqaJBmHFQUUSUficFBAdBwID9NCW6nRklXW6hTr03dN6/YPv3Bm+WaS7Kx2oTYhFeK8NDMzHlnakWWcDbiPGZK1ptJR5OOrHlq99jDj61/4aWLpjvbpDHGSTuh2dRwDVZjSbBcEKmRGPdFdOU4OqPoYk86rgNnu2KAKIwIqroLJVtKBlgjDkYME8N38Xs+u8hUOByVx0TX+7DBa2O8rtdd7j/4ntZ1221NcypJ5rz3aa2Rc1Tr1ajDOiuxV8slCVnq1Hmani6ef3r2kW/0nn9h9PDkKHbf3GEyFHkgsgbHcdbq3xwIE6BVWhTejp5RdBf14RyJDBBd2F8ojbFhMrHry2WiERvwtsgGr1YXKOYZx5kt67s7r0t2XCFr09lm7JJyFn03N2Mfa5ongVKtpZyiol7CtCpPNj/zon/8iWzv3maetTBzlIIorjokFfbSEq6RNssm558KxAGoVbRMe1sqY8v5wHG5H9AI3uDnKGEgoH7na0AKZxpjQIXtT5RSYqcRGHQkHmrQvm3re1dfaTvela9rzST5XFog2UdsmzHmKOU0ozmLgTEZRAq3ajrb+sqebY88uerF10cO56Z+ThpTksyICYWW5xFhNqajHej3omSAdgAl5FKFZ6CCvLzEzGgA3aoI8jlFMBSICDvdfL89qZAFoy5hD+ai4LbiFwUcmF0jUpb6qTWrZn/oMrtuR2P7Jkljz2v5060pxQi/BaDYb5NMOXoOkhZ+fI7XvjWz+ptPp0++umb/zPo2SaxNSzIHw4kmFLjPe5gbhAstA8Zxvi+YYlSCavPxUkZf+z2eVy3XC3ByP0AYEBTL1d6y1At7qVkkhlA2UA4E9iYPnQAgP+eSadaMdcyKEVEeaxTvupBuuMJddSGNUM453A9ux1FDXSRVrTs2yr2rK40VtKodx/ZN8RO7px9+dmLPpJ/jkYzqHXMZ+aiswZJINS1YM+KCXE7AnOQonOgSoFS8rEQaMkSpXpCWkWCIiOkK28QYQogxVhpVhXyWEDpzEipinlsWLWjZdWQkjfANDkVhCmVXadJkqrCeaL1mo01OL9hau+oquvKCfD1PtXr4cTdltqiFj3DByGYSLQFC2mAdDTo6OZO89Mbko8/ufunQG7krDEdjXRV1bZGPFUUTWzkuvSTMsXWYe8QBHYGHsOEOc1+ue7AxkAnDg+1txM8EukVRdLvdXq8HDmq32+CdowHRio4qfjDvqg9L8k5nrt1rd3qdud5spzvX6fR67bzodnozvazTzbqd2dn25KQ7PCntnvV6R9rt3Vs2TN18lV17CY83pmPRadQBo2mhPqlJTaIoAQgCIsoUfFp02vmu3dPffnLizb1dIORo2oqDiR5uZkcaxeGm7m/x/lDsifFAI+kkPB3Cvm7+arQXiV9xvM/JlNpbVOIqzNb3VAU/E+hec801d9111z333HP//feDf+pTn7rvaIAG0V/oBwhnJ933qV+47xfuuedTd957/31333fvvfffff+99/zC3b/0S3d/+pfv+4VfvP+e++79d3fd8+l/d/9nfuUXf/lT93/g/juu+/gH1rznyrB9dG7cZ0IaiwI/zhs7WFxVHZyu9Dmgy0Ll/YVItnqcr75q9OO3bvvM3Zfe+/HWpz6a/uJtzV+5o/VrH13772/b8OmPbvz3t2+796Nrb/9QfeeVk6vkwcnX/3z/d/7jvmf/8rVdX3zjxf+y96X/OvHWP7e7r5fYlk+5aJ8JdG+55Zbbbrvtjjvu+OQnP3nvvffefffdd5474a5P3v3JO27/xCduv+OO22//5O2f/OQnqvCxT9xx+123f/LOj91x5+133nXfvXfff8/d9//8nT9z+21XfOSDl9x4ZXN9ivV1ivLgo0QVfAKLJEXUAJWCB+yKXgFwLEJ3pBavuMDfckPjx64LP7zjyE9dPfVvbp776eun37dj6v3XHv6p6w69/5rDH7z58Advmf3pnUduvuiFtcX/CK/+bf7aV8Ob/5i98U/Zm1/N3/qKTj9K+SGsEv0tGQynPkyn5aRqe7jooosuu+yySy+9FMIll1xy8cUXgw9SL1ygAAAHHklEQVQI0bOWLrzkwksvvfxdF16948Lrr7ro2nddcuXll7/rknddfNGV2y7YsXnL5Vduv+jaSy+5+IcuvuSKCy7aNJ5tqL2yyj876o7UHE5YCQdSY3ZpDlw5JymUcbCOhEOSYfNlC4WFHD8M1BrF1kbYUJsdTSYuHOluTg6t93s31Q9sSCY3JDNrk/Y6P7ehNrNJemv10Ghvz0jn5dHey63itVF9daz36kh3V714LYkzRJXHYmXG/FlOaFE3FiHw00xnsrpyMyOMArSwWcZZuYoLcd+gcerlcOTJOPmw6z0ptlfdbOZD7rARCg5SJJEYxGylwyrjYBVxc+ngvaRqPR/bIXY49Joh80UnLdqJ9mpc1HCuVpyQZylmgvq02wgBeVqUtyyr20w9zjVsqklHUpoS69F8ELzLB68hncgCfVDhB4vSDdByuYmWWi3xD5092cTu2f1PtyeebxSHJU6SC+xYXex6KSTXhA0LsVPyznkPfwbkisDk2MSiMSKhQHvssOCRMPkiUiy4/FcqBWGBh9rIxJNLyadECSkbDs+KKcMSiANj6tDbQd4Wl1NCv5az+uWsu39COaYBQEAKQ/fVYnmxxzrP9GYfzeZepHwqVcZ1sScl6ao4tfILJnohJ8YADbiUBYVKnDwLgjGRqTrywkE4dxy8V5GcNBPu+CIIRdboXGAL4iAA9eBd5igQFZ7ztB5cnVB9Wff8c4bQLc0x3+I59oLdbXGXETUSgx2Z+rNWuP3i7NRXe5N/R9kzDeE0ahrJE3NsiNYCNdS11KjHKihFapq6mKo5M/gpatcEEgXWnnJuFoKGYD1wpRgoqpiyFmhNYiaxa+1M2l0JbY55rYefi7o+ZKq5qpmhugGdIXQH7Z1zAhOBaEFAtE9KOsvMxZEnO3se7ez9Vgyv+bTDEi2OWkh9sLrrOer6aC4YqavBAYlqwdcLwiINF0/6bmeeLWURqhZvTAuvuMvghMWxT0RrzCmJN8F3MlKdc1jZa8ouYoKww0FNYxrL9UJ4iC59X6HvH3BFCTwZZ7/e2//VYt/Xk7ln6/EQLpO1CMQJGchJ3mBLnanXoga/YqrllmrAb4epaqKq5kjZgIh5p8DP+xJqEhJEWdlTOTM4ok3tK0tcUcARZoQAXY+NOpaZyYA0saKut0cnb4tD6dQswMxEpZMU7T353v+ph77K+a6G9ZqAKuKGUIPMGa6Co5JF0igchEk0usiiympAC2st8AAaSjGQRgugYJBZTUA5ixkD1cCmaC+SRMRwzaVIthgdGzMTMyp3xIJmI7K6hfAO0aXvMsDUOAHF2P2OHnkun3o8dp9thIOpZhaZNWWpW4KVFxGualYqACE5UQIgYgCaTJkKw121AQyg1McNGzIpwV1TK71fohCgRQHUE6WMGmkBj2XUDBLBPGBMAoommDnMUFL5KGolPEN0Ybp3JB3kMOMSBHJx4jtx/zfyuV3KE0pt1sQZbpNxapVyzYVnle5NKholRi6BxNduIHznQonzsGMnxGVA5SalsJADNWYARFAaAWJkdioieEyIREmMyztNYobvMrZyZ+YiakO1JUem6jXkp2IBwy0TM3L2irciM9fWpatubGz4SG3jv5VNH+aNP1Pb9GG3+UO8/qOy8VbZ9BG/6SPJxlvTzbelW29NNv9suuWjsuVW2vIR2vJh3vwRv+Vn/aZbQenG25K+4Dd/FMUrks23uk3Qf1Q23+Y2ISdq+1m35edk660oyFt/VrZ8yG3+cLr+I7zlVr/xQ27DB3j8Zkk3o3tU9hEMW3UZGz4ntwB8pczAhEMuwWfq6Zb6lltHr/9/x2/6z60b/v/0PX/tb/lSfedfNW/+T6tv+GLz+i/Xb/hybeeX6u/5UmvnX4/c+OXR6/66eeMXmzf+l/rNX6q9+4u1d/8VOOTmzr9u3fTl1o1fAjVv/HLj5i81b/5iRa2bIJc0cvNfj978pdZOyF9soZKbv4iC6c4v+Xf/Vf2Wv2ze9KWxG/9m7U1fHL/5C/VLP8ejN6CjWOfBQfP9hjSkU7FA33AwmsB1iRQHJyzVKMhU7nMQ5snm39WrnwelqtjbHKWqSCmUTxUDVzxLUJmnTMIbVGXoC1Bqv00PZb9v6JAs0SSSh3QiC8wbjgArkTITaD4vz7/xUuJFYB9NUqT1aSCUsX5qqekL1C+5NC59/JDUb50gkHFZkEq5jJbV9TMRKfpwVFWqh8+pW0BgO4IDL11CoGY8x1Kp7+sGQj9WsgWapUqWWahsk8ogA4lJ6GiYLzf/KvXlczR1+F5pFhiiu9IQXTieIboLrbHS5PMV3ZWG49LjGaK7tF1WhnaI7srAcelRDNFd2i4rQztEd2XguPQohugubZeVoR2iuzJwXHoUQ3SXtsvK0A7RXRk4Lj2KU0d36fJD7dlsgSG6ZzM632/fhuh+vxY8m8v/bwAAAP//VX85ngAAAAZJREFUAwBwWMfQvZonpwAAAABJRU5ErkJggg==" alt="Logo der B2 Nürnberg"><small>[Fach oder Lernfeld kurz] · [10]. Klasse · B2 Nürnberg<span class="ver"></span></small><h1>[Titel]</h1><p>[Untertitel: Thema, Lernfeld, Blockwoche]</p></div>
+    <div><small>Beruf</small>[Beruf]</div>
+    <div><small>Ausbildungsjahr</small>[1. Jahr]</div>
+    <div><small>Lernfeld · Blockwoche</small>[LF · B]</div>
+    <div><small>Hilfsmittel</small>[Hilfsmittel]</div>
+    <div class="who"><small>Name</small><b id="nameOut">–</b></div>
+  </div>
+  <!-- Fachunterricht.html:tools -->
+<div class="tools">
+    <button type="button" id="subBtn" hidden>Abgeben</button>
+    <button type="button" id="unsubBtn" hidden>Abgabe zurücknehmen</button>
+    <button type="button" id="pdfBtn">Als PDF speichern</button>
+    <button type="button" id="tglTheme">Hell / Dunkel</button>
+    <button type="button" id="tglSol" aria-pressed="false">Lehrkraft-Modus: Lösungen zeigen</button>
+    <button type="button" id="blankBtn" class="sol-only">Leeres Arbeitsblatt drucken</button>
+    <span class="info" id="doneInfo"></span>
+    <span class="info res" id="resultInfo"></span>
+    <span class="info" id="saveInfo" role="status"></span>
+  </div>
+<!-- /Fachunterricht.html:tools -->
+</header>
+<nav id="stepnav" aria-label="Schritte"></nav>
+
+<main class="wrap">
+  <section class="step" data-lesson="Überblick">
+    <h2>1 · Überblick</h2>
+    <p class="lead">[Worum es geht und wie viele Stunden die Einheit dauert, in ein bis zwei Sätzen.]</p>
+    <div class="card">
+      <span class="tag">Zeitplan · [3 × 45 Minuten]</span>
+      <table>
+        <thead><tr><th>Stunde</th><th>Schritte</th><th>Was passiert?</th></tr></thead>
+        <tbody>
+          <tr><td><b>Stunde 1</b></td><td>[2–4]</td><td>[Phasen mit Minuten, z. B. Fall lesen (12 Min, allein)]</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <span class="tag">Arbeitsformen</span>
+      <div class="lg"><span class="pf pfx-einzel">Einzelarbeit</span><span>Ruhig lesen, denken, selbst aufschreiben.</span></div>
+      <div class="lg"><span class="pf pfx-partner">Partnerarbeit</span><span>Mit dem Sitznachbarn vergleichen und begründen.</span></div>
+      <div class="lg"><span class="pf pfx-gruppe">Gruppenarbeit</span><span>Gemeinsam diskutieren, Rollen übernehmen, ein Ergebnis finden.</span></div>
+      <div class="lg"><span class="pf pfx-plenum">Plenum</span><span>Alle hören zu: präsentieren, nachfragen, Rückmeldung geben.</span></div>
+      <div class="lg"><span class="pf pfx-wahl">Wahlaufgabe</span><span>Freiwillig für Schnelle oder als Hausaufgabe.</span></div>
+      <p class="hint">Bei jeder Phase findest du eine Zeitangabe und einen Timer. Du kannst ihn selbst starten.</p>
+    </div>
+  </section>
+
+  <section class="step" data-lesson="Stunde 1 von [3]">
+    <h2>2 · [Titel des Schritts]</h2>
+    <p class="lead">[Was passiert in diesem Schritt?]</p>
+    <div class="phasebar" data-form="einzel" data-min="10">[Titel der Phase]</div>
+    <div class="card">
+      <span class="tag">[Einzelarbeit · Freitext]</span>
+      <div class="task"><span class="tt">Aufgabe 2.1 - [Titel]</span>
+        <p>[Aufgabentext]</p>
+        <textarea rows="4"></textarea>
+        <details class="sol"><summary>Lösungsvorschlag</summary><p>[Lösungsvorschlag]</p></details>
+      </div>
+    </div>
+    <div class="teacher sol-only"><b>Lehrkraft: [Hinweise zum Ablauf]</b>[Material, Stolpersteine]</div>
+  </section>
+
+  <section class="step result" data-lesson="[Stunde 3 von 3]">
+    <div class="h2" role="heading" aria-level="2">[3] · Ergebnis</div>
+    <p class="lead">Hier siehst du, welche Aufgaben du bearbeitet hast. Ein Klick auf eine Aufgabe bringt dich dorthin. Wenn alles fertig ist: abgeben und als PDF speichern.</p>
+    <div class="card" id="stepResult"></div>
+  </section>
+</main>
+
+<!-- Fachunterricht.html:modals -->
+<!-- Passwort für Lösungen -->
+<div class="modal" id="pwModal" role="dialog" aria-modal="true" aria-labelledby="pwT" hidden>
+  <form class="modalBox" id="pwForm" autocomplete="off">
+    <h2 id="pwT">Lösungen – nur für Lehrkräfte</h2>
+    <p>Die Lösungen sind durch ein Passwort geschützt.</p>
+    <label for="pwIn">Passwort</label>
+    <input id="pwIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="err" id="pwErr" role="alert"></div>
+    <div class="btnrow"><button class="btn" type="submit">Lösungen freischalten</button><button class="btn alt" type="button" id="pwCancel">Abbrechen</button></div>
+  </form>
+</div>
+
+<!-- Abgabe -->
+<div class="modal" id="subModal" role="dialog" aria-modal="true" aria-labelledby="subT" hidden>
+  <div class="modalBox">
+    <h2 id="subT">Jetzt abgeben?</h2>
+    <p>Nach dem Abgeben kannst du <b>nichts mehr ändern</b>. Danach siehst du deine Bewertung und die Lösungsvorschläge. Du hast nur einen Versuch.</p>
+    <div class="err" id="subOpen"></div>
+    <p class="hint" id="subOpt"></p>
+    <div class="btnrow"><button class="btn" type="button" id="subOk">Endgültig abgeben</button><button class="btn alt" type="button" id="subCancel">Zurück zur Bearbeitung</button></div>
+  </div>
+</div>
+<!-- /Fachunterricht.html:modals -->
+
+<!-- Fachunterricht.html:scripts -->
+<script>
+/* Minimaler PDF-Writer (Text und Linien) – keine externen Bibliotheken. Schrift: Helvetica/WinAnsi,
+   auf Seiten mit NILS-Schriften (style#nils-schriften) NILS Text als eingebettete TrueType-Schrift (Type0, Identity-H).
+   Koordinaten in mm, Ursprung oben links; y = Grundlinie des Textes. */
+var PDFW=(function(){
+var WR=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556, 333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556, 556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584, 0, 556, 0, 222, 556, 333, 1000, 556, 556, 333, 1000, 667, 333, 1000, 0, 611, 0, 0, 222, 222, 333, 333, 350, 556, 1000, 333, 1000, 500, 333, 944, 0, 500, 667, 278, 333, 556, 556, 556, 556, 260, 556, 333, 737, 370, 556, 584, 333, 737, 552, 400, 549, 333, 333, 333, 576, 537, 333, 333, 333, 365, 556, 834, 834, 834, 611, 667, 667, 667, 667, 667, 667, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 500, 556, 556, 556, 556, 278, 278, 278, 278, 556, 556, 556, 556, 556, 556, 556, 549, 611, 556, 556, 556, 556, 500, 556, 500],WB=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611, 975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556, 333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611, 611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584, 0, 556, 0, 278, 556, 500, 1000, 556, 556, 333, 1000, 667, 333, 1000, 0, 611, 0, 0, 278, 278, 500, 500, 350, 556, 1000, 333, 1000, 556, 333, 944, 0, 500, 667, 278, 333, 556, 556, 556, 556, 280, 556, 333, 737, 370, 556, 584, 333, 737, 552, 400, 549, 333, 333, 333, 576, 556, 333, 333, 333, 365, 556, 834, 834, 834, 611, 722, 722, 722, 722, 722, 722, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 556, 556, 556, 556, 556, 278, 278, 278, 278, 611, 611, 611, 611, 611, 611, 611, 549, 611, 611, 611, 611, 611, 556, 611, 556];
+var CP={0x20AC:0x80,0x201A:0x82,0x0192:0x83,0x201E:0x84,0x2026:0x85,0x2020:0x86,0x2021:0x87,0x02C6:0x88,0x2030:0x89,0x0160:0x8A,0x2039:0x8B,0x0152:0x8C,0x017D:0x8E,0x2018:0x91,0x2019:0x92,0x201C:0x93,0x201D:0x94,0x2022:0x95,0x2013:0x96,0x2014:0x97,0x02DC:0x98,0x2122:0x99,0x0161:0x9A,0x203A:0x9B,0x0153:0x9C,0x017E:0x9E,0x0178:0x9F};
+var REPL={'−':'\x96','≈':'ca. ','≥':'>=','≤':'<=','→':'->','←':'<-','‑':'-',' ':' ',' ':' ',' ':' ',' ':' ','­':'','✕':'x','✓':'v','▲':'^','▼':'v'};
+var MM=72/25.4;
+REPL['⌀']='\xD8';REPL['☐']='[ ]';REPL['☑']='[x]';REPL['□']='[ ]';REPL['✗']='x';REPL['✔']='v';REPL['➜']='->';REPL['▶']='>';
+REPL['∥']='||';REPL['⟂']='_|_';REPL['∠']='Winkel ';REPL['○']='o';'①②③④⑤⑥⑦⑧⑨⑩'.split('').forEach(function(c,i){REPL[c]='('+(i+1)+')'});
+/* ---- NILS-Schrift (TrueType aus den eingebetteten WOFF-Teilmengen) ---- */
+var TT=null;   /* {r: Schrift normal, b: fett} oder null = Helvetica */
+function u16(b,o){return (b[o]<<8)|b[o+1]}
+function i16(b,o){var v=u16(b,o);return v>32767?v-65536:v}
+function u32(b,o){return ((b[o]<<24)>>>0)+(b[o+1]<<16)+(b[o+2]<<8)+b[o+3]}
+function strm(u,ds){return new Response(new Blob([u]).stream().pipeThrough(ds)).arrayBuffer().then(function(a){return new Uint8Array(a)})}
+function woff2ttf(w){var n=u16(w,12),dir=[],i;
+  for(i=0;i<n;i++){var o=44+20*i;dir.push({tag:w.subarray(o,o+4),off:u32(w,o+4),cl:u32(w,o+8),ol:u32(w,o+12),ck:u32(w,o+16)})}
+  return Promise.all(dir.map(function(d){var raw=w.subarray(d.off,d.off+d.cl);return d.cl<d.ol?strm(raw,new DecompressionStream('deflate')):Promise.resolve(raw)})).then(function(data){
+    var len=12+16*n;data.forEach(function(t){len+=(t.length+3)&~3});
+    var o=new Uint8Array(len),p=12+16*n,es=Math.floor(Math.log(n)/Math.LN2),sr=Math.pow(2,es)*16;
+    function w32(a,v){o[a]=v>>>24&255;o[a+1]=v>>>16&255;o[a+2]=v>>>8&255;o[a+3]=v&255}
+    function w16(a,v){o[a]=v>>8&255;o[a+1]=v&255}
+    w32(0,u32(w,4));w16(4,n);w16(6,sr);w16(8,es);w16(10,n*16-sr);
+    dir.forEach(function(d,k){var e=12+16*k;o.set(d.tag,e);w32(e+4,d.ck);w32(e+8,p);w32(e+12,data[k].length);o.set(data[k],p);p+=(data[k].length+3)&~3});
+    return o})}
+function parseTT(t,name){var n=u16(t,4),tb={},i,k;
+  for(i=0;i<n;i++){var e=12+16*i;tb[String.fromCharCode(t[e],t[e+1],t[e+2],t[e+3])]=u32(t,e+8)}
+  var hd=tb.head,hh=tb.hhea,upm=u16(t,hd+18),nh=u16(t,hh+34),adv=[],cm={},c=tb.cmap,best=-1,bf=0;
+  for(i=0;i<nh;i++)adv.push(u16(t,tb.hmtx+4*i));
+  for(i=0;i<u16(t,c+2);i++){var pid=u16(t,c+4+8*i),eid=u16(t,c+6+8*i),off=c+u32(t,c+8+8*i),f=u16(t,off);
+    if(f===12&&(pid===3&&eid===10||pid===0)){best=off;bf=12}
+    else if(f===4&&bf!==12&&(pid===3||pid===0)){best=off;bf=4}}
+  if(best<0)throw new Error('cmap fehlt');
+  if(bf===12){for(i=0;i<u32(t,best+12);i++){var g0=best+16+12*i,a=u32(t,g0),z=u32(t,g0+4),gid=u32(t,g0+8);for(k=a;k<=z;k++)cm[k]=gid+k-a}}
+  else{var sx=u16(t,best+6),eo=best+14,so=eo+sx+2,dl=so+sx,ro=dl+sx;
+    for(i=0;i<sx/2;i++){var en=u16(t,eo+2*i),st=u16(t,so+2*i),de=i16(t,dl+2*i),ra=u16(t,ro+2*i);
+      for(k=st;k<=en&&k!==0xFFFF;k++){var g;if(!ra)g=(k+de)&65535;else{g=u16(t,ro+2*i+ra+2*(k-st));if(g)g=(g+de)&65535}if(g)cm[k]=g}}}
+  var s=1000/upm;
+  return {name:name,ttf:t,adv:adv,cm:cm,s:s,used:{},asc:Math.round(i16(t,hh+4)*s),desc:Math.round(i16(t,hh+6)*s),
+    bbox:[i16(t,hd+36),i16(t,hd+38),i16(t,hd+40),i16(t,hd+42)].map(function(v){return Math.round(v*s)})}}
+function gw(f,g){return (f.adv[g<f.adv.length?g:f.adv.length-1]||0)*f.s}
+/* Text -> Glyphen; Zeichen, die in der Schrift fehlen, über REPL ersetzen, sonst "?" */
+function glyphs(f,s,out,tief){s=String(s);out=out||[];for(var i=0;i<s.length;i++){var c=s.codePointAt(i);if(c>0xFFFF)i++;
+  var ch=String.fromCodePoint(c);if(c===9||c===10)c=32;if(c<32||c===0xAD)continue;
+  var g=f.cm[c];if(!g&&(c===0xA0||c===0x202F||c===0x2009||c===0x2007||c===0x2002||c===0x2003))g=f.cm[32];
+  if(g){out.push(g);if(f.used[g]===undefined)f.used[g]=c;continue}
+  if(REPL[ch]!==undefined&&!tief){glyphs(f,REPL[ch],out,1);continue}
+  g=f.cm[63];if(g){out.push(g);f.used[g]=63}}return out}
+/* lädt die NILS-Schrift aus style#nils-schriften (nur wenn vorhanden und der Browser entpacken kann), sonst bleibt Helvetica */
+function loadTT(){var st=document.getElementById('nils-schriften');TT=null;
+  if(!st||!/NILS Text/.test(st.textContent)||!window.DecompressionStream||!window.CompressionStream)return Promise.resolve(false);
+  var css=st.textContent,get=function(w){var m=css.match(new RegExp('font-family:"NILS Text";font-weight:'+w+';font-style:normal;[^}]*?base64,([A-Za-z0-9+/=]+)'));
+    if(!m)return null;var b=atob(m[1]),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u};
+  var r=get(400),bd=get(700);if(!r)return Promise.resolve(false);
+  return Promise.all([woff2ttf(r),bd?woff2ttf(bd):null]).then(function(t){var f={r:parseTT(t[0],'NILSText')};f.b=t[1]?parseTT(t[1],'NILSText-Bold'):f.r;
+    return Promise.all([strm(f.r.ttf,new CompressionStream('deflate')),f.b!==f.r?strm(f.b.ttf,new CompressionStream('deflate')):null]).then(function(z){
+      f.r.z=z[0];if(f.b!==f.r)f.b.z=z[1];TT=f;return true})})}
+function noTT(){TT=null}
+function bin(u){var s='';for(var i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return s}
+function hx(v){return ('0000'+v.toString(16)).slice(-4).toUpperCase()}
+/* Objekte einer eingebetteten Schrift ab Nummer n: Type0 (Nummer fix), CIDFont n, FontDescriptor n+1, FontFile2 n+2, ToUnicode n+3 */
+function ttObjs(f,fix,n,objs){var g=Object.keys(f.used).map(Number).sort(function(a,b){return a-b}),W='',U=[],i;
+  g.forEach(function(x){W+=x+' ['+Math.round(gw(f,x))+'] '});
+  g.forEach(function(x){var c=f.used[x],u=c>0xFFFF?String.fromCodePoint(c):String.fromCharCode(c),h='';for(i=0;i<u.length;i++)h+=hx(u.charCodeAt(i));U.push('<'+hx(x)+'> <'+h+'>')});
+  var cm='/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /Adobe-Identity-UCS def\n/CMapType 2 def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n';
+  for(i=0;i<U.length;i+=100){var part=U.slice(i,i+100);cm+=part.length+' beginbfchar\n'+part.join('\n')+'\nendbfchar\n'}
+  cm+='endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend';
+  objs[fix]='<< /Type /Font /Subtype /Type0 /BaseFont /'+f.name+' /Encoding /Identity-H /DescendantFonts ['+n+' 0 R] /ToUnicode '+(n+3)+' 0 R >>';
+  objs[n]='<< /Type /Font /Subtype /CIDFontType2 /BaseFont /'+f.name+' /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor '+(n+1)+' 0 R /CIDToGIDMap /Identity /DW 500 /W ['+W+'] >>';
+  objs[n+1]='<< /Type /FontDescriptor /FontName /'+f.name+' /Flags 32 /FontBBox ['+f.bbox.join(' ')+'] /ItalicAngle 0 /Ascent '+f.asc+' /Descent '+f.desc+' /CapHeight '+f.asc+' /StemV '+(f.name.indexOf('Bold')>0?120:80)+' /FontFile2 '+(n+2)+' 0 R >>';
+  objs[n+2]='<< /Length '+f.z.length+' /Length1 '+f.ttf.length+' /Filter /FlateDecode >>\nstream\n'+bin(f.z)+'\nendstream';
+  objs[n+3]='<< /Length '+cm.length+' >>\nstream\n'+cm+'\nendstream'}
+/* Unicode-String -> String aus cp1252-Bytes (jedes Zeichen = 1 Byte) */
+function toB(s){var o='';s=String(s);for(var i=0;i<s.length;i++){var ch=s[i],c=s.charCodeAt(i);
+  if(c>=0xD800&&c<=0xDBFF){i++;o+='?';continue}
+  if(REPL[ch]!==undefined){o+=REPL[ch];continue}
+  if(c<32){o+=c===9||c===10?' ':'';continue}
+  if(c<128||(c>=0xA0&&c<=0xFF)){o+=ch;continue}
+  if(CP[c]!==undefined){o+=String.fromCharCode(CP[c]);continue}
+  o+='?'}return o}
+function esc(b){return b.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)')}
+function num(n){return (Math.round(n*100)/100).toString()}
+function rgb(c){c=c||[0,0,0];return num(c[0])+' '+num(c[1])+' '+num(c[2])}
+function width(s,size,bold){if(TT){var f=bold?TT.b:TT.r,g=glyphs(f,s),q=0;for(var j=0;j<g.length;j++)q+=gw(f,g[j]);return q*size/1000/MM}var b=toB(s),W=bold?WB:WR,t=0;for(var i=0;i<b.length;i++)t+=W[b.charCodeAt(i)]||0;return t*size/1000/MM}
+function hexUtf16(s){var h='FEFF';s=String(s);for(var i=0;i<s.length;i++){h+=('0000'+s.charCodeAt(i).toString(16)).slice(-4)}return '<'+h.toUpperCase()+'>'}
+
+function Doc(opt){opt=opt||{};this.w=210;this.h=297;this.pages=[];this.info=opt.info||{};this.addPage()}
+Doc.prototype.addPage=function(){this.cur=[];this.pages.push(this.cur);return this.pages.length};
+Doc.prototype.text=function(s,x,y,size,bold,color){if(TT){var g=glyphs(bold?TT.b:TT.r,s);if(!g.length)return;
+  this.cur.push('BT /'+(bold?'F2':'F1')+' '+num(size)+' Tf '+rgb(color)+' rg '+num(x*MM)+' '+num((this.h-y)*MM)+' Td <'+g.map(hx).join('')+'> Tj ET');return}
+  s=toB(s);if(!s)return;
+  this.cur.push('BT /'+(bold?'F2':'F1')+' '+num(size)+' Tf '+rgb(color)+' rg '+num(x*MM)+' '+num((this.h-y)*MM)+' Td ('+esc(s)+') Tj ET')};
+Doc.prototype.line=function(x1,y1,x2,y2,lw,color){this.cur.push(rgb(color)+' RG '+num((lw||0.2)*MM)+' w 0 J '+num(x1*MM)+' '+num((this.h-y1)*MM)+' m '+num(x2*MM)+' '+num((this.h-y2)*MM)+' l S')};
+Doc.prototype.rect=function(x,y,w,h,o){o=o||{};var op=o.fill&&o.stroke?'B':o.fill?'f':'S',s='';
+  if(o.fill)s+=rgb(o.fill)+' rg ';if(o.stroke||!o.fill)s+=rgb(o.stroke)+' RG '+num((o.lw||0.2)*MM)+' w ';
+  this.cur.push(s+num(x*MM)+' '+num((this.h-y-h)*MM)+' '+num(w*MM)+' '+num(h*MM)+' re '+op)};
+Doc.prototype.poly=function(pts,lw,color){var H=this.h,s=rgb(color)+' RG '+num(lw*MM)+' w 1 J 1 j ';pts.forEach(function(p,i){s+=num(p[0]*MM)+' '+num((H-p[1])*MM)+(i?' l ':' m ')});this.cur.push(s+'S')};
+Doc.prototype.build=function(){
+  var self=this,objs=[],n=this.pages.length;
+  var kids=[];for(var i=0;i<n;i++)kids.push((6+2*i)+' 0 R');
+  objs[1]='<< /Type /Catalog /Pages 2 0 R >>';
+  objs[2]='<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+n+' >>';
+  objs[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+  objs[4]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+  var inf=this.info,d=new Date(),p2=function(v){return ('0'+v).slice(-2)};
+  var cd='D:'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+p2(d.getHours())+p2(d.getMinutes())+p2(d.getSeconds());
+  objs[5]='<< /Title '+hexUtf16(inf.title||'')+' /Author '+hexUtf16(inf.author||'')+' /Subject '+hexUtf16(inf.subject||'')+' /Creator (KSV-Lernskript) /Producer (KSV-Lernskript) /CreationDate ('+cd+')'+(inf.ksv?' /KSV ('+inf.ksv+')':'')+' >>';
+  this.pages.forEach(function(ops,i){var content=ops.join('\n');
+    objs[6+2*i]='<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+num(self.w*MM)+' '+num(self.h*MM)+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents '+(7+2*i)+' 0 R >>';
+    objs[7+2*i]='<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream'});
+  if(TT){ttObjs(TT.r,3,6+2*n,objs);if(TT.b!==TT.r)ttObjs(TT.b,4,10+2*n,objs);else objs[4]=objs[3]}
+  var out='%PDF-1.4\n%\xE2\xE3\xCF\xD3\n',off=[];
+  for(var k=1;k<objs.length;k++){off[k]=out.length;out+=k+' 0 obj\n'+objs[k]+'\nendobj\n'}
+  var xr=out.length;out+='xref\n0 '+objs.length+'\n0000000000 65535 f \n';
+  for(k=1;k<objs.length;k++)out+=('0000000000'+off[k]).slice(-10)+' 00000 n \n';
+  out+='trailer\n<< /Size '+objs.length+' /Root 1 0 R /Info 5 0 R >>\nstartxref\n'+xr+'\n%%EOF';
+  var u=new Uint8Array(out.length);for(var j=0;j<out.length;j++)u[j]=out.charCodeAt(j)&255;return u};
+
+return {Doc:Doc,width:width,toB:toB,MM:MM,loadTT:loadTT,noTT:noTT};
+})();
+function sha256(ascii){function rr(v,a){return(v>>>a)|(v<<(32-a))}var mw=Math.pow(2,32),res='',w=[],bl=ascii.length*8,i,j,H=[],K=[],pc=0,comp={};
+  for(var c=2;pc<64;c++){if(!comp[c]){for(i=0;i<313;i+=c)comp[i]=c;H[pc]=(Math.pow(c,.5)*mw)|0;K[pc++]=(Math.pow(c,1/3)*mw)|0}}
+  ascii+='\x80';while(ascii.length%64-56)ascii+='\x00';
+  for(i=0;i<ascii.length;i++){j=ascii.charCodeAt(i);if(j>>8)return '';w[i>>2]|=j<<((3-i)%4)*8}
+  w[w.length]=((bl/mw)|0);w[w.length]=bl;
+  for(j=0;j<w.length;){var ww=w.slice(j,j+=16),old=H;H=H.slice(0,8);
+    for(i=0;i<64;i++){var w15=ww[i-15],w2=ww[i-2],a=H[0],e=H[4];
+      var t1=H[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&H[5])^((~e)&H[6]))+K[i]+(ww[i]=(i<16)?ww[i]:(ww[i-16]+(rr(w15,7)^rr(w15,18)^(w15>>>3))+ww[i-7]+(rr(w2,17)^rr(w2,19)^(w2>>>10)))|0);
+      var t2=(rr(a,2)^rr(a,13)^rr(a,22))+((a&H[1])^(a&H[2])^(H[1]&H[2]));
+      H=[(t1+t2)|0].concat(H);H[4]=(H[4]+t1)|0}
+    for(i=0;i<8;i++)H[i]=(H[i]+old[i])|0}
+  for(i=0;i<8;i++)for(j=3;j+1;j--){var b=(H[i]>>(j*8))&255;res+=((b<16)?0:'')+b.toString(16)}return res}
+</script>
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var root = document.documentElement;
+  var tasks = [].slice.call(document.querySelectorAll('.task'));
+  var lms = window.ScormReport || null;   /* kommt aus scorm-api.js, nur im SCORM-Paket vorhanden */
+  var completeSent = false;
+
+  /* ---------- Name und Punkte aus/an die Lernplattform ---------- */
+  /* Abgeschlossen = alle Aufgaben des Einsteiger- und Prüfungsniveaus bearbeitet. Punkte = Bewertung (siehe grade), gewichtet
+     Einsteigerniveau 40 %, Prüfungsniveau 40 %, Profiniveau 20 %, bestanden ab 70 %. Aufgaben ohne hinterlegte Lösung zählen bearbeitet = volle Punkte. */
+  function levelOf(t) { var l = t.closest('.level'); return l && l.classList.contains('foundation') ? 'foundation' : (l && l.classList.contains('challenge') ? 'challenge' : 'core'); }
+  /* Gewicht der Aufgabe im Niveau (data-gewicht, z. B. die Punkte aus dem Original), sonst 1 */
+  function weightOf(t) { var v = parseFloat(String(t.getAttribute('data-gewicht') || '').replace(',', '.')); return v > 0 ? v : 1; }
+  /* Kennung in den Moodle-Berichten: Titel bis zum Gedankenstrich ("Aufgabe 1.1 - Titel" -> Aufgabe-1.1), ohne Leer- und Sonderzeichen;
+     scorm-api.js hängt Niveau und Höchstpunkte an */
+  function taskLabel(t, i) {
+    var s = ((t.querySelector('.tt') || {}).textContent || '').replace(/\s+/g, ' ').trim().split(/ [-–—] |: /)[0];
+    s = s.replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/Ä/g, 'Ae').replace(/Ö/g, 'Oe').replace(/Ü/g, 'Ue').replace(/ß/g, 'ss')
+         .replace(/[^A-Za-z0-9.,_-]+/g, '-').replace(/-{2,}/g, '-').replace(/^[-.,]+|[-.,]+$/g, '').slice(0, 40);
+    return s || 'Aufgabe-' + (i + 1);
+  }
+  function pText(x) { return String(Math.round(x * 10) / 10).replace('.', ','); }   /* Punkte: immer ganze Zahlen */
+  var LW = { foundation: 40, core: 40, challenge: 20 }, lvCount = { foundation: 0, core: 0, challenge: 0 }, lvWeight = { foundation: 0, core: 0, challenge: 0 };
+  var taskInfo = {}, labels = {}, scored = 0, sent = {};
+  var submitted = false, subDate = '', frozen = false;   /* Abgabe: danach gesperrt, Bewertung und Lösungsvorschläge sichtbar */
+  tasks.forEach(function (t, i) {
+    if (isDone(t) === null) return;
+    var l = levelOf(t), lb = taskLabel(t, i), n = 1;
+    while (labels[lb + (n > 1 ? '-' + n : '')]) n++;   /* gleicher Titel: Aufgabe-2.1, Aufgabe-2.1-2 */
+    lb += n > 1 ? '-' + n : ''; labels[lb] = 1;
+    lvCount[l]++; lvWeight[l] += weightOf(t); scored++;
+    taskInfo['a' + (i + 1)] = { level: l, weight: weightOf(t), label: lb };
+  });
+  /* Höchstpunkte je Aufgabe wie in scorm-api.js, nur ganze Punkte (Summe 100): 100 auf die vorhandenen Niveaus (40:40:20), den Anteil des
+     Niveaus nach Gewicht auf seine Aufgaben. Anteile abrunden, die Restpunkte einzeln an die größten Reste, bei Gleichstand an die letzten
+     (drei gleiche Aufgaben mit zusammen 40 = 13, 13, 14; nur Einsteiger- und Profiniveau = 67 und 33) */
+  function share(sum, w) {
+    var W = 0, p = [], r = [], idx = [], rest = sum, i, q, f;
+    for (i = 0; i < w.length; i++) W += w[i];
+    for (i = 0; i < w.length; i++) { q = W > 0 ? sum * w[i] / W : 0; f = Math.floor(q + 1e-9); p[i] = f; r[i] = Math.round((q - f) * 1e6); rest -= f; idx[i] = i; }
+    idx.sort(function (a, b) { return r[b] - r[a] || b - a; });
+    for (i = 0; i < rest && i < idx.length; i++) p[idx[i]]++;
+    return p;
+  }
+  var maxP = {};
+  (function () {
+    var ls = [], lk, lp;
+    for (lk in LW) { if (lvCount[lk]) ls.push(lk); }
+    lp = share(100, ls.map(function (l) { return LW[l]; }));
+    ls.forEach(function (l, j) {
+      var idx = [], p;
+      tasks.forEach(function (t, i) { var m = taskInfo['a' + (i + 1)]; if (m && m.level === l) idx.push(i); });
+      p = share(lp[j], idx.map(function (i) { return taskInfo['a' + (i + 1)].weight; }));
+      idx.forEach(function (i, n) { maxP[i] = p[n]; });
+    });
+  })();
+  if (lms) { try { lms.init(scored ? { levels: lvCount, tasks: taskInfo, quality: true, submit: true } : { scoring: false }); } catch (e) { /* ohne Lernplattform weiter */ } }
+
+  /* ---------- Bewertung: hinterlegte Lösungen (data-ok, data-keys) ---------- */
+  function fieldsOf(t) { return [].filter.call(t.querySelectorAll('input:not([type=button]):not([type=submit]):not([type=hidden]), textarea, select'), function (f) { return !f.closest('details.sol, .sol-only'); }); }
+  function norm(s) { return String(s).toLowerCase().replace(/\s+/g, ' ').trim(); }
+  function numOf(s) { var m = String(s).replace(/\s+/g, '').replace(',', '.').match(/^[-+]?\d*\.?\d+(e[-+]?\d+)?/i); return m ? parseFloat(m[0]) : NaN; }
+  /* Vergleichsschlüssel für Textantworten: "594 × 841 mm" = "594x841" = "594 * 841"; Leerzeichen, Komma/Punkt, nachgestelltes mm egal */
+  function key(s) { return norm(s).replace(/[×*]/g, 'x').replace(/\s+/g, '').replace(/,/g, '.').replace(/mm$/, ''); }
+  function hits(v, ok, tol) {   /* Alternativen mit | getrennt; Zahlen mit Toleranz data-tol, Text ohne Groß-/Kleinschreibung */
+    return String(ok).split('|').some(function (a) {
+      if (/^[-+]?\d*[.,]?\d+$/.test(a.replace(/\s+/g, ''))) {   /* Zahl: Eingabe darf eine Einheit dahinter haben ("12,5 mm") */
+        var n = numOf(a), x = numOf(v);
+        return !isNaN(x) && Math.abs(x - n) <= (tol ? Math.abs(numOf(tol)) : 1e-9 * Math.max(1, Math.abs(n)));
+      }
+      return key(a) !== '' && key(v) === key(a);
+    });
+  }
+  function labelOf(f) { var l = f.closest('label'); return String(l ? l.textContent : f.value).replace(/\s+/g, ' ').trim(); }
+  /* Spielergebnis im Ergebnisfeld (data-score): "6 von 8" -> 0,75. data-score="richtig" verlangt "x von y richtig".
+     null = noch kein passendes Ergebnis (z. B. "noch nicht geprüft") */
+  function scoreOf(f) {
+    var w = (f.getAttribute('data-score') || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var m = String(f.value).match(new RegExp('(\\d+)\\s*von\\s*(\\d+)' + (w ? '\\s*' + w : ''), 'i'));
+    return m && +m[2] > 0 ? Math.min(1, +m[1] / +m[2]) : null;
+  }
+  /* Anteil richtig 0..1; null = keine hinterlegte Lösung (dann zählt nur bearbeitet / offen) */
+  function grade(t) {
+    var ff = fieldsOf(t), items = [], seen = {}, box = { need: 0, right: 0, wrong: 0 };
+    ff.forEach(function (f) {
+      if (f.type === 'radio') {
+        if (seen[f.name]) return; seen[f.name] = 1;
+        var grp = ff.filter(function (g) { return g.type === 'radio' && g.name === f.name; });
+        if (!grp.some(function (g) { return g.hasAttribute('data-ok'); })) return;
+        items.push(grp.some(function (g) { return g.checked && g.hasAttribute('data-ok'); }) ? 1 : 0);
+      } else if (f.type === 'checkbox') {
+        if (f.hasAttribute('data-ok')) { box.need++; if (f.checked) box.right++; } else if (f.checked) box.wrong++;
+      } else if (f.tagName === 'SELECT') {
+        if (!f.querySelector('option[data-ok]')) return;
+        var o = f.options[f.selectedIndex]; items.push(o && o.hasAttribute('data-ok') ? 1 : 0);
+      } else if (f.tagName === 'TEXTAREA') {
+        var keys = (f.getAttribute('data-keys') || '').split(';').filter(function (k) { return k.trim(); }), v = norm(f.value), n = 0;
+        if (!keys.length) return;
+        keys.forEach(function (k) { if (k.split('|').some(function (a) { return norm(a) && v.indexOf(norm(a)) > -1; })) n++; });
+        items.push(n / keys.length);
+      } else if (f.hasAttribute('data-score')) {
+        var sc = scoreOf(f); items.push(sc === null ? 0 : sc);
+      } else if (f.hasAttribute('data-ok')) {
+        items.push(hits(f.value, f.getAttribute('data-ok'), f.getAttribute('data-tol')) ? 1 : 0);
+      }
+    });
+    if (box.need) items.push(Math.max(0, (box.right - box.wrong) / box.need));   /* Mehrfachauswahl: falsche Kreuze ziehen ab */
+    return items.length ? items.reduce(function (a, b) { return a + b; }, 0) / items.length : null;
+  }
+  function answerText(t) {
+    var out = [];
+    fieldsOf(t).forEach(function (f) {
+      if (f.type === 'radio' || f.type === 'checkbox') { if (f.checked) out.push(labelOf(f)); }
+      else if (f.tagName === 'SELECT') { if (f.value !== '') out.push(f.options[f.selectedIndex].text.trim()); }
+      else if (f.value.trim()) out.push(f.value.trim());
+    });
+    return out.join(' | ').replace(/\s*\n\s*/g, ' / ');
+  }
+  function expectedText(t) {
+    var out = [];
+    fieldsOf(t).forEach(function (f) {
+      if ((f.type === 'radio' || f.type === 'checkbox') && f.hasAttribute('data-ok')) out.push(labelOf(f));
+      else if (f.tagName === 'SELECT') { var o = f.querySelector('option[data-ok]'); if (o) out.push(o.text.trim()); }
+      else if (f.tagName === 'TEXTAREA') { if (f.getAttribute('data-keys')) out.push('Begriffe: ' + f.getAttribute('data-keys')); }
+      else if (f.hasAttribute('data-score')) out.push('Spielergebnis "x von y' + (f.getAttribute('data-score') ? ' ' + f.getAttribute('data-score') : '') + '" = Anteil');
+      else if (f.hasAttribute('data-ok')) out.push(f.getAttribute('data-ok') + (f.getAttribute('data-tol') ? ' (±' + f.getAttribute('data-tol') + ')' : ''));
+    });
+    return out.join(' | ');
+  }
+  /* Meldung je Aufgabe: nur wenn sich bearbeitet, Bewertung oder Antwort geändert hat. first = beim Öffnen (Abgleich mit Lernplattform) */
+  /* Gesamtergebnis 0-100 wie in scorm-api.js: Summe der erreichten ganzen Punkte je Aufgabe, Aufgaben ohne hinterlegte Lösung = bearbeitet */
+  function taskShare(t) { var d = isDone(t), g = d ? grade(t) : 0; return g === null ? 1 : Math.round(g * 100) / 100; }   /* 0..1 */
+  /* erreichte Punkte einer Aufgabe: Bewertung 0..1 x Höchstpunkte, auf ganze Punkte gerundet (halbe auf) */
+  function earnedP(t, i) { return Math.round(Math.round((maxP[i] || 0) * taskShare(t) * 1e6) / 1e6); }
+  function pageScore() {
+    var pts = 0;
+    tasks.forEach(function (t, i) { if (taskInfo['a' + (i + 1)]) pts += earnedP(t, i); });
+    return Math.min(100, pts);
+  }
+  function reportAll(first) {
+    if (!scored || !lms || !lms.connected || frozen) return 0;
+    var n = 0;
+    tasks.forEach(function (t, i) {
+      var d = isDone(t); if (d === null) return;
+      var id = 'a' + (i + 1), g = grade(t), s = g === null ? null : Math.round(g * 100) / 100, r = d ? answerText(t) : '', k = (d ? 1 : 0) + '|' + s + '|' + r;
+      if (first) {
+        var st = lms.taskState(id);
+        if (st ? (st.d === (d ? 1 : 0) && st.s === (s === null ? (d ? 1 : 0) : s)) : !d) { sent[id] = k; return; }
+      }
+      if (sent[id] === k) return;
+      sent[id] = k; n++;
+      try { lms.task(id, { level: levelOf(t), done: d, score: s, response: r, description: ((t.querySelector('.tt') || {}).textContent || id), correctResponse: expectedText(t) }); } catch (e) { /* still */ }
+    });
+    return n;
+  }
+  function lmsName() { try { return (lms && lms.connected) ? lms.studentName() : ''; } catch (e) { return ''; } }
+  function showName() { var n = lmsName(); $('#nameOut').textContent = n || '–'; }
+
+  /* ---------- Aufgaben: bearbeitet / offen ---------- */
+  /* true = etwas eingetragen, false = leer, null = Aufgabe hat keine Eingabefelder */
+  function isDone(t) {
+    var f = t.querySelectorAll('input:not([type=button]):not([type=submit]):not([type=hidden]), textarea, select'), i, e;
+    if (!f.length) return null;
+    for (i = 0; i < f.length; i++) {
+      e = f[i];
+      if (e.type === 'checkbox' || e.type === 'radio') { if (e.checked) return true; }
+      else if (e.tagName === 'SELECT') { if (e.value !== '') return true; }
+      else if (e.value.replace(/\s+/g, '') !== '') return true;
+    }
+    return false;
+  }
+  function update() {
+    var total = 0, done = 0, optional = 0;
+    tasks.forEach(function (t, i) {
+      var d = isDone(t);
+      if (d === null) { t.removeAttribute('data-done'); t.removeAttribute('data-pts'); t.removeAttribute('data-ptsq'); return; }
+      total++; if (d) done++;
+      /* Auswertung (sichtbar im Lehrkraft-Modus und nach der Abgabe) */
+      var g = d ? grade(t) : null;
+      if (!d) { t.removeAttribute('data-q'); t.removeAttribute('data-qc'); }
+      else if (g === null) { t.setAttribute('data-q', 'ohne automatische Bewertung: mit der Lösung vergleichen'); t.setAttribute('data-qc', 'none'); }
+      else { t.setAttribute('data-q', g >= 1 ? 'richtig' : g <= 0 ? 'falsch' : Math.round(g * 100) + ' % richtig'); t.setAttribute('data-qc', g >= 1 ? 'ok' : g <= 0 ? 'bad' : 'part'); }
+      /* Punkte: Höchstpunkte immer, erreichte im Lehrkraft-Modus und nach der Abgabe */
+      t.setAttribute('data-pts', pText(maxP[i]) + ' P.');
+      t.setAttribute('data-ptsq', pText(earnedP(t, i)) + ' von ' + pText(maxP[i]) + ' P.');
+      /* Profiniveau (schwarz) ist freiwillig: Einsteigerniveau + Prüfungsniveau = 80 % der Punkte (Mindestanforderung, Bestehensgrenze 70 %) */
+      if (t.closest('.level.challenge')) optional++;
+      t.setAttribute('data-done', d ? '1' : '0');
+    });
+    $('#doneInfo').textContent = total ? done + ' von ' + total + ' Aufgaben bearbeitet' + (optional ? ' (Profiniveau freiwillig)' : '') : '';
+    ampel();
+    /* Seite ohne Aufgaben (nur Lesestoff): mit dem Öffnen abgeschlossen */
+    if (!scored && lms && !completeSent) { completeSent = true; try { lms.complete(); } catch (e) { /* still */ } }
+  }
+
+  /* ---------- Ampel: vorläufiger Stand nach den bisher erreichten Punkten (aus 100), ohne Summe ----------
+     Rot unter 40 %, gelb bis zur Bestehensgrenze, grün ab der Bestehensgrenze, über 90 % ein Stern. Die Bestehensgrenze kommt aus der
+     Lernplattform (lms.passMark(), Manifest 0.7), ohne Verbindung gilt 70. Lernpakete sind Übungspakete,
+     die Lernenden dürfen ihren Stand sehen (Entscheidung der Lehrkraft vom 13.11.2026). */
+  var AMPEL_GELB = 40, AMPEL_STERN = 90;
+  var AMPEL_TEXT = { rot: 'Es ist noch viel zu tun', gelb: 'Es ist nicht mehr weit', gruen: 'Bestehensgrenze erreicht', stern: 'Profilevel erreicht' };
+  function passMark() { try { var p = lms && lms.connected && lms.passMark ? +lms.passMark() : 70; return p > 0 ? p : 70; } catch (e) { return 70; } }
+  function ampel() {
+    var a = $('#ampel');
+    if (!scored) { if (a) a.hidden = true; return; }
+    if (!a) { a = document.createElement('div'); a.id = 'ampel'; a.setAttribute('role', 'status'); a.setAttribute('aria-live', 'polite'); document.body.appendChild(a); }
+    var sc = pageScore(), pm = passMark(), k = (sc > AMPEL_STERN && sc >= pm) ? 'stern' : sc >= pm ? 'gruen' : sc >= AMPEL_GELB ? 'gelb' : 'rot';
+    if (a.className !== k) { a.className = k; a.textContent = AMPEL_TEXT[k]; }
+    a.hidden = false;
+  }
+
+  /* ---------- Abgabe: einmalig, danach gesperrt (die Lehrkraft kann sie mit ihrem Passwort zurücknehmen) ---------- */
+  var locked = [];   /* von lockFields gesperrte Felder; schon vorher gesperrte (z. B. readonly data-score) bleiben gesperrt */
+  function lockFields() {
+    locked = [];
+    allFields.forEach(function (f) {
+      var p = (f.tagName === 'TEXTAREA' || (f.tagName === 'INPUT' && /^(text|number|search|email|url|tel)$/.test(f.type))) ? 'readOnly' : 'disabled';
+      if (!f[p]) { f[p] = true; locked.push([f, p]); }
+    });
+  }
+  function unlockFields() { locked.forEach(function (x) { x[0][x[1]] = false; }); locked = []; }
+  function showSubmitted() {
+    submitted = true;
+    document.body.classList.add('submitted');
+    lockFields();
+    update();
+    $('#subBtn').hidden = true;
+    $('#unsubBtn').hidden = false;
+    var sc = pageScore();
+    $('#resultInfo').textContent = 'Abgegeben' + (subDate ? ' am ' + subDate : '') + ': ' + sc + ' %' + (sc >= passMark() ? ' (bestanden)' : ' (nicht bestanden, Grenze ' + passMark() + ' %)');
+    if (!$('#subNote')) {
+      var m = document.createElement('div'), mn = $('main');
+      m.className = 'merke'; m.id = 'subNote';
+      m.innerHTML = '<b>Abgegeben.</b> Deine Antworten sind gesperrt. Bei jeder Aufgabe steht jetzt deine Bewertung, und du kannst den Lösungsvorschlag aufklappen. ' +
+                    'Vergleiche vor allem die Aufgaben "ohne automatische Bewertung" mit der Lösung. Mit "Als PDF speichern" bekommst du deine Antworten mit Lösungsvorschlag. ' +
+                    'Aus Versehen abgegeben? Deine Lehrkraft kann die Abgabe zurücknehmen.';
+      mn.insertBefore(m, mn.firstChild);
+    }
+  }
+  function openSub() {
+    var req = [], opt = 0, unchecked = [];
+    tasks.forEach(function (t) {
+      var tt = ((t.querySelector('.tt') || {}).textContent || 'Aufgabe').trim();
+      /* Spiel gespielt, aber Ergebnis noch nicht geprüft (kein "x von y") */
+      if (fieldsOf(t).some(function (f) { return f.hasAttribute('data-score') && f.value.trim() && scoreOf(f) === null; })) unchecked.push(tt);
+      if (isDone(t) !== false) return;
+      if (levelOf(t) === 'challenge') opt++; else req.push(tt);
+    });
+    $('#subOpen').textContent = (req.length ? 'Noch nicht bearbeitet (zählt 0 Punkte): ' + req.join(', ') + '. ' : '') +
+                                (unchecked.length ? 'Noch nicht auf "Prüfen" geklickt (zählt 0 Punkte): ' + unchecked.join(', ') : '');
+    $('#subOpt').textContent = opt ? 'Profiniveau noch offen (freiwillig): ' + opt + (opt === 1 ? ' Aufgabe' : ' Aufgaben') : '';
+    $('#subModal').hidden = false; document.body.classList.add('modalOpen');
+    setTimeout(function () { $('#subCancel').focus(); }, 30);
+  }
+  function closeSub() { $('#subModal').hidden = true; document.body.classList.remove('modalOpen'); }
+  function doSubmit() {
+    closeSub();
+    if (submitted) return;
+    var d = new Date();
+    subDate = ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear();
+    showSubmitted();
+    if (lms && lms.connected) {
+      clearTimeout(saveTimer);
+      save();                                     /* letzter Stand + Abgabe-Vermerk */
+      try { lms.submit(); } catch (e) { /* still */ }
+    }
+    frozen = true;
+  }
+  /* Lehrkraft (nach Passwort): Abgabe zurücknehmen, die Lernenden arbeiten weiter und geben später neu ab */
+  function undoSubmit() {
+    if (!submitted) return;
+    submitted = false; subDate = ''; frozen = false;
+    unlockFields();
+    document.body.classList.remove('submitted');
+    setSol(false);
+    [].forEach.call(document.querySelectorAll('details.sol[open]'), function (d) { d.open = false; });   /* Lösungsvorschläge wieder gesperrt */
+    var n = $('#subNote'); if (n) n.parentNode.removeChild(n);
+    $('#resultInfo').textContent = '';
+    $('#unsubBtn').hidden = true;
+    $('#subBtn').hidden = !scored;
+    update();
+    if (lms && lms.connected) {
+      try { lms.unsubmit(); } catch (e) { /* still */ }
+      clearTimeout(saveTimer);
+      save();                                     /* Stand ohne Abgabe-Vermerk */
+    }
+    $('#saveInfo').textContent = 'Abgabe zurückgenommen: Du kannst weiterarbeiten.'; $('#saveInfo').className = 'info';
+  }
+
+  /* ---------- Drucken ---------- */
+  function cssStr(s) { return '"' + String(s).replace(/[\\"]/g, '\\$&').replace(/[\r\n]+/g, ' ') + '"'; }
+  function nameText() { var n = $('#nameOut').textContent.trim(); return n === '–' ? '' : n; }
+  function beforePrint() {
+    var blank = document.body.classList.contains('blankPrint');
+    if (!blank) {
+      update();
+      [].forEach.call(document.querySelectorAll('textarea'), function (a) { a.style.height = 'auto'; a.style.height = a.scrollHeight + 'px'; });
+    }
+    markBreaks();
+    var h1 = $('.tb h1'), st = $('#print-head');
+    if (!st) { st = document.createElement('style'); st.id = 'print-head'; document.head.appendChild(st); }
+    var nils = /NILS Text/.test(($('#nils-schriften') || {}).textContent || ''), pf = '; font:9pt ' + (nils ? '"NILS Text", ' : '') + 'Arial, sans-serif; color:#555; }';
+    st.textContent = '@page { @top-left { content:' + cssStr(h1 ? h1.textContent : document.title) + pf +
+                     ' @top-right { content:' + cssStr('Name: ' + ((!blank && nameText()) || '______________________')) + pf + ' }';
+  }
+
+  /* Seitenumbrüche: Aufgaben bis etwa ein Viertel einer A4-Seite werden nicht getrennt (.keep), längere dürfen umbrechen.
+     Gemessen mit Testseiten: so bleibt jede Seite außer der letzten mindestens etwa 3/4 gefüllt. */
+  function markBreaks() {
+    tasks.forEach(function (t) { t.classList.toggle('keep', t.getBoundingClientRect().height <= 250); });
+  }
+
+  /* ---------- Leeres Arbeitsblatt für die analoge Bearbeitung (nur Lehrkraft-Modus) ----------
+     Druckt alle Aufgaben ohne Einträge und ohne Lösungen (Druckdialog, "Als PDF speichern" möglich). Die Einträge auf der Seite bleiben erhalten. */
+  var blankKeep = null, CIRC = '①②③④⑤⑥⑦⑧⑨⑩';
+  function blankEl(tag, cls, txt) {
+    var e = document.createElement(tag); e.className = cls; e.setAttribute('data-blank', '');
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  /* Auswahlfelder wie in den NILS-Druckfassungen: kurz = Linie + "(a / b)"; gleiche Auswahl in >= 3 Feldern oder in einer Tabelle =
+     ein Kasten "Auswahl:"; sonst Nummer an der Lücke und ein Kasten "Auswahl für die nummerierten Lücken" (alphabetisch) */
+  function blankSelects(t) {
+    var sel = [].filter.call(t.querySelectorAll('select'), function (s) { return !s.closest('details.sol, .sol-only, .print-alt, .screen-only'); });
+    if (!sel.length) return;
+    var opts = sel.map(function (s) { return [].filter.call(s.options, function (x) { return x.value !== ''; }).map(function (x) { return x.text.trim(); }); });
+    var key = function (o) { return o.slice().sort().join('\u0001'); }, k0 = key(opts[0]);
+    var same = opts.every(function (o) { return key(o) === k0; }), inTab = sel.every(function (s) { return s.closest('td, th'); });
+    var shared = same && (sel.length >= 3 || (inTab && sel.length >= 2));
+    var groups = [], gk = {}, sortDe = function (a, b) { return a.localeCompare(b, 'de', { numeric: true }); };
+    sel.forEach(function (s, i) {
+      var o = opts[i], abs = s.style.position === 'absolute', b = blankEl('span', abs ? 'pbox' : 'pblank');
+      if (abs) b.style.cssText = s.style.cssText;
+      else b.style.minWidth = Math.min(60, Math.max(16, Math.max.apply(null, o.map(function (x) { return x.length; }).concat([0])) * 1.9)) + 'mm';   /* Breite nach der längsten Option (wie NILS) */
+      if (!shared) {
+        if (!abs && !s.closest('td, th') && o.join(' / ').length <= 30) {
+          s.insertAdjacentElement('afterend', b); b.insertAdjacentElement('afterend', blankEl('span', 'popt', '(' + o.join(' / ') + ')'));
+          return;
+        }
+        var k = key(o);
+        if (!(k in gk)) { gk[k] = groups.length; groups.push(o); }
+        b.appendChild(blankEl('span', 'pnr', gk[k] < 10 ? CIRC[gk[k]] : '(' + (gk[k] + 1) + ')'));
+      }
+      s.insertAdjacentElement('afterend', b);
+    });
+    var tt = t.querySelector('.tt'), sol = t.querySelector(':scope > details.sol');
+    if (shared) {
+      var p = blankEl('p', 'pwords'), bb = document.createElement('b'); bb.textContent = 'Auswahl:';
+      p.appendChild(bb); p.appendChild(document.createTextNode(opts[0].slice().sort(sortDe).join(' · ')));
+      if (tt) tt.insertAdjacentElement('afterend', p); else t.insertBefore(p, t.firstChild);
+    } else if (groups.length) {
+      var box = blankEl('div', 'pwords'), bt = document.createElement('b'); bt.textContent = 'Auswahl für die nummerierten Lücken:';
+      box.appendChild(bt);
+      groups.forEach(function (o, i) {
+        var line = document.createElement('span'); line.textContent = (i < 10 ? CIRC[i] : '(' + (i + 1) + ')') + '  ' + o.slice().sort(sortDe).join(' · ');
+        box.appendChild(line);
+      });
+      if (sol) t.insertBefore(box, sol); else t.appendChild(box);
+    }
+  }
+  function printBlank() {
+    if (blankKeep) return;
+    blankKeep = { s: snapshot(), name: $('#nameOut').textContent };
+    restore({ f: 2, k: {} });   /* nur für den Druck leeren, ohne Speichern */
+    tasks.forEach(function (t) { t.removeAttribute('data-done'); t.removeAttribute('data-q'); t.removeAttribute('data-qc'); t.removeAttribute('data-ptsq'); });
+    try { document.dispatchEvent(new CustomEvent('leerdruck', { detail: { an: true } })); } catch (e) { /* Modul-Fehler stoppen den Druck nicht */ }
+    tasks.forEach(blankSelects);
+    [].forEach.call(document.querySelectorAll('main .task textarea'), function (a) {
+      var n = +a.getAttribute('data-zeilen') || Math.max(3, +a.getAttribute('rows') || 5);   /* Schreiblinien: data-zeilen, sonst rows (mind. 3), ohne Angabe 5 */
+      a.setAttribute('data-h', a.style.height); a.style.height = (n * 32) + 'px';
+    });
+    var tb = $('.tb'), pm = blankEl('div', 'pmeta');
+    ['Name:', 'Klasse:', 'Datum:'].forEach(function (l) { var sp = document.createElement('span'); sp.textContent = l; sp.appendChild(document.createElement('i')); pm.appendChild(sp); });
+    if (tb) tb.insertAdjacentElement('afterend', pm);
+    $('#nameOut').textContent = '';
+    document.body.classList.add('blankPrint');
+    try { window.print(); } finally { endBlank(); }
+  }
+  function endBlank() {
+    if (!blankKeep) return;
+    document.body.classList.remove('blankPrint');
+    [].forEach.call(document.querySelectorAll('[data-blank], .blank-opts'), function (n) { n.remove(); });
+    [].forEach.call(document.querySelectorAll('main .task textarea[data-h]'), function (a) { a.style.height = a.getAttribute('data-h'); a.removeAttribute('data-h'); });
+    try { document.dispatchEvent(new CustomEvent('leerdruck', { detail: { an: false } })); } catch (e) { /* still */ }
+    restore(blankKeep.s);
+    $('#nameOut').textContent = blankKeep.name;
+    blankKeep = null;
+    update();
+  }
+
+  /* ---------- PDF-Export (nur Text; Bewertung und Lösungsvorschlag erst nach der Abgabe) ---------- */
+  function slug(s) {   /* Dateiname: Schreibweise bleibt, erstes Zeichen groß, höchstens 80 Zeichen an einer Wortgrenze (CLAUDE.md) */
+    s = String(s).replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/Ä/g, 'Ae').replace(/Ö/g, 'Oe').replace(/Ü/g, 'Ue').replace(/ß/g, 'ss').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    if (s.length > 80) s = s.slice(0, 81).replace(/-[^-]*$/, '').slice(0, 80);
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  function pdfTitle(h1) {   /* Seitentitel ohne angehängte Schriftfeld-Überschrift: "Kapitel 1 – Thema – Überschrift" -> "Kapitel 1 – Thema" */
+    var t = document.title.replace(/\s+/g, ' ').trim(), end = ' – ' + String(h1).replace(/\s+/g, ' ').trim();
+    return t.length > end.length && t.slice(-end.length) === end ? t.slice(0, -end.length) : t;
+  }
+  function taskText(t) {
+    var c = t.cloneNode(true), tt = c.querySelector('.tt'), o, k, i;
+    if (tt) tt.remove();
+    [].forEach.call(c.querySelectorAll('.lines, button, details.sol, .sol-only, .no-pdf, .paper, .print-alt, svg, script, style'), function (n) { n.remove(); });   /* svg: Beschriftung von Zeichnungen nicht als lose Zahlen */
+    o = [].filter.call(t.querySelectorAll('input, textarea, select'), function (f) { return !f.closest('.lines, details.sol, .sol-only, .no-pdf, .print-alt'); });
+    k = c.querySelectorAll('input, textarea, select');
+    for (i = 0; i < k.length; i++) {
+      var a = o[i], b = k[i], txt = '', v;
+      if (a.tagName === 'TEXTAREA') { v = a.value.trim(); txt = '\n' + (v || '(leer)') + '\n'; }
+      else if (a.tagName === 'SELECT') { txt = '[' + (a.value !== '' ? a.options[a.selectedIndex].text : '___') + ']'; }
+      else if (a.type === 'checkbox' || a.type === 'radio') { txt = a.checked ? '(x) ' : '( ) '; var lb = b.closest('label'); if (lb) lb.insertAdjacentText('afterend', '\n'); }
+      else if (a.type === 'hidden' || a.type === 'button' || a.type === 'submit') { txt = ''; }
+      else { v = a.value.trim(); txt = '[' + (v || '___') + ']'; }
+      b.replaceWith(document.createTextNode(txt));
+    }
+    return plain(c);
+  }
+  function plain(c) {
+    [].forEach.call(c.querySelectorAll('br'), function (n) { n.replaceWith(document.createTextNode('\n')); });
+    [].forEach.call(c.querySelectorAll('p, div, li, h2, h3, h4, tr, ol, ul, table'), function (n) { n.insertAdjacentText('afterend', '\n'); });
+    return c.textContent.replace(/[ \t\r\f\v\u00a0]+/g, ' ').split('\n').map(function (s) { return s.trim(); }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  /* Musterl\u00f6sung einer Aufgabe als Text (nur nach der Abgabe im PDF) */
+  function solText(t) {
+    var s = t.querySelector('details.sol'); if (!s) return '';
+    var c = s.cloneNode(true);
+    [].forEach.call(c.querySelectorAll('summary, script, style, .no-pdf'), function (n) { n.remove(); });
+    return plain(c);
+  }
+  /* PDF-Export: auf Seiten mit NILS-Schriften erst die Schrift laden (wird eingebettet), sonst und bei Fehlern Helvetica */
+  var ttLaden = null;
+  function ladeSchrift() {
+    if (!ttLaden) ttLaden = PDFW.loadTT().catch(function () { PDFW.noTT(); return false; });
+    return ttLaden;
+  }
+  function makePdf() {
+    ladeSchrift().then(function (tt) {
+      try { makePdfNow(); }
+      catch (e) {
+        if (!tt) { setTimeout(function () { throw e; }); return; }
+        PDFW.noTT(); ttLaden = Promise.resolve(false);   /* Ersatzweg: Helvetica */
+        try { makePdfNow(); } catch (e2) { setTimeout(function () { throw e2; }); }
+      }
+    });
+  }
+  function makePdfNow() {
+    var ML = 18, CW = 174, TOP = 24, BOT = 278, LH = 4.7;
+    var GRAY = [.42, .46, .50], INK = [.11, .17, .23], RED = [.78, .20, .18], GREEN = [.12, .48, .29], LINE = [.72, .76, .80], YEL = [1, .96, .80];
+    var title = ($('.tb h1') || {}).textContent || document.title, sub = ($('.tb .name p') || {}).textContent || '', name = nameText();
+    var doc = new PDFW.Doc({ info: { title: title, author: name, subject: sub } }), y = TOP;
+    function fit(s, size, bold, w) { s = String(s); if (PDFW.width(s, size, bold) <= w) return s; while (s.length > 1 && PDFW.width(s + '...', size, bold) > w) s = s.slice(0, -1); return s + '...'; }
+    function wrap(s, size, bold, maxW) {
+      var out = [];
+      String(s).split('\n').forEach(function (par) {
+        if (!par.trim()) { out.push(''); return; }
+        var line = '';
+        par.split(/\s+/).forEach(function (w) {
+          var t = line ? line + ' ' + w : w;
+          if (PDFW.width(t, size, bold) <= maxW) { line = t; return; }
+          if (line) { out.push(line); line = ''; }
+          while (PDFW.width(w, size, bold) > maxW) { var k = w.length; while (k > 1 && PDFW.width(w.slice(0, k), size, bold) > maxW) k--; out.push(w.slice(0, k)); w = w.slice(k); }
+          line = w;
+        });
+        out.push(line);
+      });
+      return out;
+    }
+    function ensure(h) { if (y + h > BOT) { doc.addPage(); y = TOP; } }
+    function cell(x, cy, w, h, label, value, big) {
+      doc.rect(x, cy, w, h, { stroke: INK, lw: .35 });
+      doc.text(label, x + 2, cy + 3.6, 6.5, false, GRAY);
+      if (!value) return;
+      /* lange Werte (z. B. ein Lernfeldname) in zwei kleineren Zeilen statt abgeschnitten */
+      if (big || PDFW.width(value, 9.5, false) <= w - 4) { doc.text(fit(value, 9.5, !!big, w - 4), x + 2, cy + 8.6, 9.5, !!big, INK); return; }
+      wrap(value, 8, false, w - 4).slice(0, 2).forEach(function (l, i) { doc.text(l, x + 2, cy + 6.9 + i * 3.1, 8, false, INK); });
+    }
+    /* Schriftfeld */
+    var cells = [].slice.call(document.querySelectorAll('.tb > div:not(.name)')).map(function (d) {
+      var s = d.querySelector('small'); return { l: s ? s.textContent : '', v: d.classList.contains('who') ? name : d.textContent.replace(s ? s.textContent : '', '').trim(), w: d.classList.contains('wide') };
+    });
+    doc.rect(ML, y, 116, 22, { stroke: INK, lw: .35 });
+    doc.text('Benennung', ML + 2, y + 3.6, 6.5, false, GRAY);
+    /* Version oben rechts im Benennungsfeld, im PDF mit Datum (V1.3 · 28.10.2026) */
+    var vr = $('.tb .ver'), ver = vr ? vr.textContent.trim() : '';
+    if (ver && vr.getAttribute('data-datum')) ver += ' · ' + vr.getAttribute('data-datum');
+    if (ver) doc.text(ver, ML + 114 - PDFW.width(ver, 6.5, false), y + 3.6, 6.5, false, GRAY);
+    doc.text(fit(title, 15, true, 112), ML + 2, y + 12.5, 15, true, INK);
+    doc.text(fit(sub, 9, false, 112), ML + 2, y + 18.5, 9, false, GRAY);
+    if ($('.tb.kurz')) {
+      /* Variante "kurz" (Ethik): neben der Benennung nur der Name, Zusatzzellen (.wide) darunter in voller Breite */
+      doc.rect(ML + 116, y, 58, 22, { stroke: INK, lw: .35 });
+      doc.text('Name', ML + 118, y + 3.6, 6.5, false, GRAY);
+      if (name) doc.text(fit(name, 11, true, 54), ML + 118, y + 12.5, 11, true, INK);
+      y += 22;
+      cells.forEach(function (c) { if (c.w) { cell(ML, y, 174, 11, c.l, c.v); y += 11; } });
+      y += 5;
+    } else {
+      cells.forEach(function (c, i) {
+        var pos = [[ML + 116, y, 58, 11], [ML + 116, y + 11, 58, 11], [ML, y + 22, 58, 11], [ML + 58, y + 22, 58, 11], [ML + 116, y + 22, 58, 11], [ML, y + 33, 174, 11]][i];
+        if (pos) cell(pos[0], pos[1], pos[2], pos[3], c.l, c.v, i === 4);
+      });
+      y += 33 + (cells.length > 5 ? 11 : 0) + 5;
+    }
+    var d = new Date();
+    doc.text('Erstellt am ' + ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear(), ML, y, 8, false, GRAY);
+    y += 7;
+    var SOL = [.12, .37, .60];
+    if (submitted) { doc.text($('#resultInfo').textContent, ML, y, 11, true, pageScore() >= passMark() ? GREEN : RED); y += 8; }
+    /* nach der Abgabe: Bewertung und Lösungsvorschlag unter jeder Aufgabe */
+    function extra(el) {
+      if (!submitted) return;
+      var q = el.getAttribute('data-q'), qc = el.getAttribute('data-qc'), pq = el.getAttribute('data-ptsq'), st = solText(el);
+      if (q || pq) {
+        wrap('Bewertung: ' + (q && pq ? q + ' – ' + pq : q || pq), 9.5, true, CW - 4).forEach(function (l) {
+          ensure(LH + 1); doc.text(l, ML + 2, y + 3.4, 9.5, true, qc === 'ok' ? GREEN : (qc === 'bad' || !q) ? RED : GRAY); y += LH;
+        });
+        y += 1;
+      }
+      if (st) {
+        ensure(LH * 2); doc.text('Lösungsvorschlag:', ML + 2, y + 3.4, 9.5, true, SOL); y += LH;
+        wrap(st, 9.5, false, CW - 8).forEach(function (l) { ensure(LH); if (l) doc.text(l, ML + 6, y + 3.4, 9.5, false, SOL); y += LH; });
+      }
+    }
+    /* Überschriften und Aufgaben in Dokumentreihenfolge */
+    [].forEach.call(document.querySelectorAll('main h2, main h3, main .task'), function (el) {
+      if (el.closest('.answers, .print-alt') || (el.tagName !== 'DIV' && el.closest('.task'))) return;
+      if (el.tagName !== 'DIV') {
+        var hs = el.tagName === 'H2' ? 13 : 11.5, hl = wrap(el.textContent.trim(), hs, true, CW);
+        ensure(hl.length * (hs * .5) + 8 + 22); y += 2;   /* + Platz für den Anfang der nächsten Aufgabe: keine Überschrift allein am Seitenende */
+        hl.forEach(function (l) { doc.text(l, ML, y + 4, hs, true, INK); y += hs * .5; });
+        y += 2;
+        var pm = el.closest('.phasehead') && el.closest('.phasehead').querySelector('.phmeta');
+        if (pm) {
+          var pt = [].map.call(pm.querySelectorAll('.chip'), function (c) { return c.textContent.trim(); }).join('  |  ');
+          wrap(pt, 9.5, false, CW).forEach(function (l) { ensure(5); doc.text(l, ML, y + 3, 9.5, false, GRAY); y += 5; });
+          y += 1;
+        }
+        return;
+      }
+      var tt =el.querySelector('.tt'), done = isDone(el), pt = el.getAttribute('data-pts'), tl = wrap((tt ? tt.textContent.trim() : 'Aufgabe') + (pt ? ' (' + pt + ')' : ''), 11, true, CW - 34);
+      ensure(tl.length * 5 + 12 + 3 * LH);   /* Aufgabentitel nur mit mindestens drei Zeilen Inhalt auf derselben Seite */
+      doc.rect(ML, y, CW, tl.length * 5 + 2.5, { fill: done === false ? [.98, .90, .90] : [.90, .93, .96] });
+      tl.forEach(function (l, i) { doc.text(l, ML + 2, y + 4 + i * 5, 11, true, INK); });
+      if (done !== null) doc.text(done ? 'bearbeitet' : 'nicht bearbeitet', ML + CW - 2 - PDFW.width(done ? 'bearbeitet' : 'nicht bearbeitet', 8, true), y + 4, 8, true, done ? GREEN : RED);
+      y += tl.length * 5 + 5;
+      if (done === false) {
+        ensure(8); doc.text('Hier fehlt noch etwas: Diese Aufgabe wurde nicht bearbeitet.', ML + 2, y + 3, 10, true, RED); y += 10;
+        if (submitted) { extra(el); y += 4; doc.line(ML, y - 2, ML + CW, y - 2, .2, LINE); }
+        return;
+      }
+      wrap(taskText(el), 10, false, CW - 4).forEach(function (l) { ensure(LH); if (l) doc.text(l, ML + 2, y + 3.4, 10, false, INK); y += LH; });
+      extra(el);
+      y += 4; doc.line(ML, y - 2, ML + CW, y - 2, .2, LINE);
+    });
+    /* Kopf- und Fußzeile auf jeder Seite */
+    var n = doc.pages.length;
+    doc.pages.forEach(function (_, i) {
+      doc.cur = doc.pages[i];
+      doc.text(fit(title, 8, false, 110), ML, 12, 8, false, GRAY);
+      var nm = 'Name: ' + (name || '______________'); doc.text(nm, ML + CW - PDFW.width(nm, 8, false), 12, 8, false, GRAY);
+      doc.line(ML, 14, ML + CW, 14, .2, LINE);
+      var pg = 'Seite ' + (i + 1) + ' von ' + n; doc.text(pg, ML + CW - PDFW.width(pg, 8, false), 290, 8, false, GRAY);
+    });
+    var blob = new Blob([doc.build()], { type: 'application/pdf' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = (slug(pdfTitle(title)) || 'Ergebnis') + (name ? '_' + slug(name) : '') + '.pdf';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  /* ---------- Hell / Dunkel ---------- */
+  function isDark() { return root.getAttribute('data-theme') === 'dark'; }  /* Standard: hell */
+  try { var sv = localStorage.getItem('page-theme'); if (sv === 'dark' || sv === 'light') root.setAttribute('data-theme', sv); } catch (e) { /* ohne Speicher weiter */ }
+  $('#tglTheme').addEventListener('click', function () {
+    var next = isDark() ? 'light' : 'dark'; root.setAttribute('data-theme', next);
+    try { localStorage.setItem('page-theme', next); } catch (e) { /* still */ }
+  });
+
+  /* ---------- Lösungen: Passwort für Lehrkräfte ---------- */
+  function meta(n) { var m = document.querySelector('meta[name="' + n + '"]'); return m ? m.getAttribute('content') || '' : ''; }
+  var pend = null, body = document.body;
+  function openModal() { $('#pwModal').hidden = false; body.classList.add('modalOpen'); }
+  function closeModal() { $('#pwModal').hidden = true; body.classList.remove('modalOpen'); }
+  function askPw(cb, txt) {   /* txt: Liste mit Titel, Satz und Button-Text; ohne txt: Lösungen freischalten */
+    txt = txt || ['Lösungen – nur für Lehrkräfte', 'Die Lösungen sind durch ein Passwort geschützt.', 'Lösungen freischalten'];
+    $('#pwT').textContent = txt[0]; $('#pwForm p').textContent = txt[1]; $('#pwForm [type=submit]').textContent = txt[2];
+    pend = cb; $('#pwIn').value = ''; $('#pwErr').textContent = ''; openModal(); setTimeout(function () { $('#pwIn').focus(); }, 30);
+  }
+  function setSol(on) {
+    body.classList.toggle('solOpen', on);
+    var b = $('#tglSol'); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.textContent = on ? 'Lehrkraft-Modus: Lösungen verbergen' : 'Lehrkraft-Modus: Lösungen zeigen';
+  }
+  $('#tglSol').addEventListener('click', function () { if (body.classList.contains('solOpen')) setSol(false); else askPw(function () { setSol(true); }); });
+  $('#pwForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var hash = meta('loesung-hash'), v = $('#pwIn').value.trim().toUpperCase();
+    if (!hash) { $('#pwErr').textContent = 'Für diese Seite ist kein Passwort hinterlegt.'; return; }
+    if (sha256(meta('loesung-salt') + v) === hash) { var cb = pend; pend = null; closeModal(); if (cb) setTimeout(cb, 0); }
+    else { $('#pwErr').textContent = 'Falsches Passwort.'; $('#pwIn').select(); }
+  });
+  $('#pwCancel').addEventListener('click', function () { pend = null; closeModal(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!$('#pwModal').hidden) { pend = null; closeModal(); }
+    if (!$('#subModal').hidden) closeSub();
+  });
+  $('#subBtn').addEventListener('click', openSub);
+  $('#subOk').addEventListener('click', doSubmit);
+  $('#subCancel').addEventListener('click', closeSub);
+  $('#unsubBtn').addEventListener('click', function () {
+    askPw(undoSubmit, ['Abgabe zurücknehmen – nur für Lehrkräfte', 'Mit dem Lehrkraft-Passwort wird die Abgabe zurückgenommen. Danach kann weitergearbeitet und neu abgegeben werden.', 'Abgabe zurücknehmen']);
+  });
+  /* Lösungsvorschläge (details.sol) lassen sich nur nach Passwort öffnen */
+  [].forEach.call(document.querySelectorAll('details.sol > summary'), function (s) {
+    s.addEventListener('click', function (e) {
+      if (body.classList.contains('solOpen') || body.classList.contains('submitted')) return;   /* nach der Abgabe frei */
+      e.preventDefault(); askPw(function () { setSol(true); s.parentNode.open = true; });
+    });
+  });
+
+  /* ---------- Fortschritt in der Lernplattform speichern (SCORM suspend_data) ----------
+     Format { f: 2, k: { Schlüssel: Wert }, sub, sd }: Checkbox/Radio = 1, Auswahl = selectedIndex, sonst Text.
+     Schlüssel je Feld: data-k aus der Seite, sonst <Aufgabe>-<Nr.>. Aufgabe = id der Aufgabe, sonst a1, a2 ... (gezählt werden nur
+     Aufgaben ohne id), Nr. = laufende Nummer der Felder ohne data-k in dieser Aufgabe; Felder außerhalb von Aufgaben: x-<Nr.>.
+     So passt ein gespeicherter Stand auch zu einer geänderten Fassung der Seite (ein Feld mehr oder weniger).
+     Altes Format { n, v: [[Position, Wert]] } wird weiter gelesen (nach Position) und beim nächsten Speichern umgeschrieben. */
+  var allFields = [].slice.call(document.querySelectorAll('main input:not([type=button]):not([type=submit]):not([type=hidden]), main textarea, main select'));
+  var fields = allFields.filter(function (f) { return !f.closest('details.sol, .sol-only'); });   /* ohne Felder in Lösungsvorschläge */
+  var fkeys = fieldKeys(), saveTimer = null;
+  var hold = false, restoreGap = false, gapMsg = '';   /* hold: gespeicherte Eingaben passen nicht, nichts melden oder speichern, bis die Lernenden selbst etwas eintragen */
+  function fieldKeys() {
+    var own = {}, used = {}, tno = {}, pos = {}, n = 0;
+    fields.forEach(function (f) { var k = f.getAttribute('data-k'); if (k) own[k] = 1; });
+    tasks.forEach(function (t, i) { if (!t.id) tno[i] = 'a' + (++n); });
+    return fields.map(function (f) {
+      var k = f.getAttribute('data-k'), t, tid;
+      if (!k || used[k]) {
+        t = f.closest('.task'); tid = t ? (t.id || tno[tasks.indexOf(t)]) : 'x';
+        do { pos[tid] = (pos[tid] || 0) + 1; k = tid + '-' + pos[tid]; } while (own[k] || used[k]);   /* nie einen Schlüssel doppelt vergeben */
+      }
+      used[k] = 1;
+      return k;
+    });
+  }
+  function filled(s) {   /* true = Stand enthält mindestens eine Eingabe */
+    if (!s || typeof s !== 'object') return false;
+    if (s.k && typeof s.k === 'object') { for (var k in s.k) { if (s.k.hasOwnProperty(k)) return true; } return false; }
+    return Array.isArray(s.v) && s.v.length > 0;
+  }
+  function snapshot() {
+    var k = {};
+    fields.forEach(function (f, i) {
+      if (f.tagName === 'SELECT') { if (f.selectedIndex > 0) k[fkeys[i]] = f.selectedIndex; }
+      else if (f.type === 'checkbox' || f.type === 'radio') { if (f.checked) k[fkeys[i]] = 1; }
+      else if (f.value !== '') k[fkeys[i]] = f.value;
+    });
+    var o = { f: 2, k: k };
+    if (submitted) { o.sub = 1; o.sd = subDate; }   /* Abgabe-Vermerk */
+    return o;
+  }
+  function fits(f, v) {   /* passt der gespeicherte Wert zur Art des Feldes? */
+    if (f.tagName === 'SELECT') return typeof v === 'number' && v % 1 === 0 && v > 0 && v < f.options.length;
+    if (f.type === 'checkbox' || f.type === 'radio') return v === 1;
+    return typeof v === 'string';
+  }
+  /* Felder auf einen gespeicherten Stand setzen: jedes Feld, dessen Schlüssel vorkommt; unbekannte Schlüssel werden übersprungen,
+     Felder ohne gespeicherten Wert bleiben leer. true = mindestens ein Wert gesetzt. restoreGap = nicht alles ließ sich zuordnen. */
+  function restore(s) {
+    var put = [], lost = 0, list = fields, at = {}, k;
+    restoreGap = false;
+    if (!s || typeof s !== 'object') return false;
+    if (s.k && typeof s.k === 'object') {
+      fkeys.forEach(function (x, i) { at[x] = fields[i]; });
+      for (k in s.k) { if (s.k.hasOwnProperty(k)) { if (at.hasOwnProperty(k) && fits(at[k], s.k[k])) put.push([at[k], s.k[k]]); else lost++; } }
+    } else if (Array.isArray(s.v)) {   /* altes Format: nach Position, auch bei abweichender Feldanzahl (lieber teilweise als gar nicht) */
+      list = allFields;
+      s.v.forEach(function (p) { var f = p && allFields[p[0]]; if (f && fits(f, p[1])) put.push([f, p[1]]); else lost++; });
+      if (s.n !== allFields.length) lost++;   /* andere Fassung: Zuordnung nach Position ist unsicher */
+    } else return false;
+    restoreGap = lost > 0;
+    if (!put.length && filled(s)) return false;   /* nichts passt: Felder unverändert lassen */
+    list.forEach(function (f) {
+      if (f.tagName === 'SELECT') f.selectedIndex = 0;
+      else if (f.type === 'checkbox' || f.type === 'radio') f.checked = false;
+      else f.value = '';
+    });
+    put.forEach(function (p) {
+      var f = p[0];
+      if (f.tagName === 'SELECT') f.selectedIndex = p[1];
+      else if (f.type === 'checkbox' || f.type === 'radio') f.checked = true;
+      else f.value = p[1];
+    });
+    return put.length > 0;
+  }
+  function save() {
+    if (!lms || !lms.connected || frozen || hold) return;   /* nach der Abgabe wird nichts mehr gespeichert */
+    var s = snapshot(), old = lms.loadState(), info = $('#saveInfo');
+    if (!filled(s) && filled(old)) return;   /* nie gespeicherte Eingaben durch einen leeren Stand ersetzen (auch nicht im Bericht) */
+    var r = reportAll(false);
+    if (!filled(s) && !submitted && old === null) { if (r) lms.flush(); return; }
+    var ok = lms.saveState(s);
+    if (!ok && r) lms.flush();
+    if (saveFail) return;   /* roter Hinweis "Nicht gespeichert" bleibt stehen */
+    info.textContent = ok ? (gapMsg || bakMsg || 'Fortschritt gespeichert') : 'Achtung: Zu viele Zeichen zum Zwischenspeichern. Bitte als PDF sichern!';
+    info.className = 'info' + (ok && !gapMsg ? '' : ' bad');
+  }
+  function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 800); }
+  /* Lernplattform bestätigt das Speichern nicht (abgemeldet, Verbindung weg): roter Hinweis unten, bis es wieder klappt.
+     safe = Eingaben sind in diesem Browser gesichert (scorm-api.js spielt sie beim nächsten Öffnen zurück). */
+  var saveFail = false, bakMsg = '';
+  function saveStatus(ok, safe) {
+    var info = $('#saveInfo'), al = $('#saveAlarm');
+    if (ok) {
+      if (!saveFail) return;
+      saveFail = false; if (al) al.hidden = true;
+      info.textContent = gapMsg || 'Fortschritt gespeichert'; info.className = 'info' + (gapMsg ? ' bad' : '');
+      return;
+    }
+    saveFail = true;
+    if (!al) {
+      al = document.createElement('div'); al.id = 'saveAlarm'; al.setAttribute('role', 'alert');
+      al.innerHTML = '<p></p><button type="button" class="btn">Als PDF speichern</button>';
+      al.querySelector('button').addEventListener('click', function () { $('#pdfBtn').click(); });
+      document.body.appendChild(al);
+    }
+    al.querySelector('p').innerHTML = '<b>Nicht gespeichert!</b> Die Verbindung zur ByCS ist unterbrochen (abgemeldet?). ' +
+      (safe ? 'Deine Eingaben sind in diesem Browser gesichert: Lernpaket schließen, neu anmelden und auf diesem Rechner wieder öffnen.'
+            : 'Speichere sofort als PDF und sag deiner Lehrkraft Bescheid.');
+    al.hidden = false;
+    info.textContent = 'Nicht gespeichert'; info.className = 'info bad';
+  }
+
+  showName();
+  if (lms && lms.connected) {
+    var ps = lms.loadState(), got = false;
+    try { got = restore(ps); } catch (e) { /* ohne Wiederherstellung weiter */ }
+    if (got && lms.fromBackup && lms.fromBackup()) bakMsg = 'Eingaben aus der Sicherung im Browser wiederhergestellt';
+    if (got) $('#saveInfo').textContent = bakMsg || 'Fortschritt wiederhergestellt';
+    /* Gespeicherte Eingaben, aber keine passt zu dieser Fassung: den Stand in der Lernplattform (Eingaben und Bericht) nicht
+       mit leeren Feldern überschreiben, bis die Lernenden selbst etwas eintragen */
+    hold = filled(ps) && !got;
+    try {   /* schon abgegeben (frühere Sitzung): gesperrt anzeigen, nichts mehr melden */
+      if ((ps && ps.sub) || lms.isSubmitted()) { subDate = (ps && ps.sd) || ''; frozen = true; showSubmitted(); $('#saveInfo').textContent = ''; }
+    } catch (e) { /* still */ }
+    if (filled(ps) && (hold || restoreGap)) {
+      gapMsg = 'Gespeicherter Stand passt nicht ganz zu dieser Version – bitte Lehrkraft informieren.';
+      $('#saveInfo').textContent = gapMsg; $('#saveInfo').className = 'info bad';
+    }
+    try { if (!hold && reportAll(true)) lms.flush(); } catch (e) { /* still */ }
+    lms.beforeFinish(function () { clearTimeout(saveTimer); save(); });
+    if (lms.onSaveStatus) lms.onSaveStatus(saveStatus);   /* nach den Start-Meldungen: ein schon fehlgeschlagenes Speichern wird gleich gemeldet */
+  }
+  function release() { hold = false; bakMsg = ''; }   /* erste eigene Eingabe: ab jetzt gilt der Stand auf der Seite */
+  document.addEventListener('input', release);
+  document.addEventListener('change', release);
+  document.addEventListener('input', update);
+  document.addEventListener('change', update);
+  document.addEventListener('input', saveSoon);
+  document.addEventListener('change', saveSoon);
+  window.addEventListener('beforeprint', beforePrint);
+  window.addEventListener('afterprint', endBlank);
+  $('#pdfBtn').addEventListener('click', makePdf);
+  $('#blankBtn').addEventListener('click', printBlank);
+  if (/NILS Text/.test(($('#nils-schriften') || {}).textContent || '')) setTimeout(ladeSchrift, 1500);   /* Schrift für den PDF-Export vorladen */
+  if (scored && !submitted) $('#subBtn').hidden = false;
+  update();
+  save();
+})();
+</script>
+<!-- /Fachunterricht.html:scripts -->
+<!-- Allgemeinbildung.html:script -->
+<script>
+/* Layout "Lernschritte": Schritt-Leiste, Phasen mit Timer, Ergebnis-Seite. Nur Navigation und Anzeige;
+   Bewertung, Speichern, Abgabe, PDF und Lösungssperre erledigt das Script aus Fachunterricht.html darüber. */
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  var body = document.body, nav = $('#stepnav'), steps = $$('main > section.step'), cur = 0, links = [];
+  var KEY = 'steps-cur|' + location.pathname + '|' + document.title;
+
+  /* ---------- Phasen: Sozialform, Minuten, Timer (immer nur einer läuft) ---------- */
+  var FORMS = { einzel: 'Einzelarbeit', partner: 'Partnerarbeit', gruppe: 'Gruppenarbeit', plenum: 'Plenum', wahl: 'Wahlaufgabe' };
+  var tm = null;
+  function beep() {
+    try {
+      var C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+      var a = new C();
+      [0, .35, .7].forEach(function (t) { var o = a.createOscillator(), g = a.createGain(); o.frequency.value = 880; g.gain.value = .15; o.connect(g); g.connect(a.destination); o.start(a.currentTime + t); o.stop(a.currentTime + t + .2); });
+    } catch (e) { /* ohne Ton weiter */ }
+  }
+  function stopTimer() { if (!tm) return; clearInterval(tm.id); tm.btn.textContent = 'Timer starten'; tm.disp.textContent = ''; tm.p.classList.remove('run', 'over'); tm = null; }
+  function tick() {
+    if (!tm) return;
+    var r = Math.max(0, Math.round((tm.end - Date.now()) / 1000)), m = Math.floor(r / 60), s = r % 60;
+    tm.disp.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    if (r <= 0) { clearInterval(tm.id); tm.p.classList.remove('run'); tm.p.classList.add('over'); tm.disp.textContent = 'Zeit ist um'; tm.btn.textContent = 'Timer starten'; tm = null; beep(); }
+  }
+  $$('.phasebar').forEach(function (p) {
+    var f = p.getAttribute('data-form') || 'einzel', min = parseFloat(String(p.getAttribute('data-min') || '').replace(',', '.')) || 0, title = p.textContent.trim();
+    p.classList.add('ph-' + f);
+    p.innerHTML = '<span class="pf">' + esc(p.getAttribute('data-label') || FORMS[f] || f) + '</span><span class="pt">' + esc(title) + '</span>' +
+                  (min ? '<span class="pm">' + String(min).replace('.', ',') + ' Min</span>' : '');
+    if (!min) return;
+    var disp = document.createElement('span'), btn = document.createElement('button');
+    disp.className = 'ph-time'; disp.setAttribute('aria-live', 'off');
+    btn.type = 'button'; btn.className = 'btn alt ph-btn'; btn.textContent = 'Timer starten';
+    btn.addEventListener('click', function () {
+      if (tm && tm.btn === btn) { stopTimer(); return; }
+      stopTimer(); p.classList.remove('over');
+      tm = { id: setInterval(tick, 250), btn: btn, disp: disp, p: p, end: Date.now() + min * 60000 };
+      btn.textContent = 'Timer stoppen'; p.classList.add('run'); tick();
+    });
+    p.appendChild(btn); p.appendChild(disp);
+  });
+
+  if (!steps.length || !nav) return;
+
+  /* ---------- Schritte: Leiste, Stunden-Label, Zurück/Weiter ---------- */
+  function headOf(s) { return s.querySelector('h2, .h2'); }
+  function titleOf(s) { var h = headOf(s); return s.getAttribute('data-title') || (h ? h.textContent.replace(/^\s*\d+\s*[·.:-]\s*/, '').trim() : ''); }
+  steps.forEach(function (s, i) {
+    var b = document.createElement('button'), t = titleOf(s), l = s.getAttribute('data-lesson') || '';
+    b.type = 'button'; b.className = 'pill'; b.textContent = String(i + 1);
+    b.title = t + (l ? ' · ' + l : ''); b.setAttribute('aria-label', 'Schritt ' + (i + 1) + (t ? ': ' + t : ''));
+    b.addEventListener('click', function () { show(i); });
+    nav.appendChild(b);
+    if (l) { var d = document.createElement('div'), h = headOf(s); d.className = 'lesson'; d.textContent = l; s.insertBefore(d, h && h.parentNode === s ? h : s.firstChild); }
+    var p = document.createElement('div'), bk = document.createElement('button'), nx = document.createElement('button');
+    p.className = 'pager';
+    bk.type = 'button'; bk.className = 'btn alt'; bk.textContent = 'Zurück';
+    nx.type = 'button'; nx.className = 'btn'; nx.textContent = 'Weiter';
+    if (i === 0) bk.style.visibility = 'hidden';
+    if (i === steps.length - 1) nx.style.visibility = 'hidden';
+    bk.addEventListener('click', function () { show(i - 1); });
+    nx.addEventListener('click', function () { show(i + 1); });
+    p.appendChild(bk); p.appendChild(nx); s.appendChild(p);
+  });
+  var pills = $$('.pill', nav);
+  function show(i, keepScroll) {
+    if (i < 0 || i >= steps.length) return;
+    cur = i;
+    steps.forEach(function (s, k) { s.classList.toggle('on', k === i); });
+    pills.forEach(function (p, k) { p.classList.toggle('on', k === i); if (k === i) p.setAttribute('aria-current', 'step'); else p.removeAttribute('aria-current'); });
+    nav.scrollLeft = pills[i].offsetLeft - (nav.clientWidth - pills[i].offsetWidth) / 2;
+    try { localStorage.setItem(KEY, String(i)); } catch (e) { /* ohne Speicher weiter */ }
+    if (steps[i].classList.contains('result')) renderResult();
+    if (!keepScroll) {   /* neuer Schritt beginnt oben, direkt unter der Leiste */
+      var hb = $('header.titleblock'), y = hb ? hb.getBoundingClientRect().bottom + window.pageYOffset : 0;
+      if (window.pageYOffset > y) window.scrollTo(0, y);
+    }
+  }
+
+  /* ---------- Fortschritt: Punkt an der Leiste, wenn alle Pflichtaufgaben eines Schritts bearbeitet sind ---------- */
+  function stepDone(s) {
+    var all = $$('.task[data-done]', s), req = all.filter(function (t) { return !t.closest('.level.challenge'); }), list = req.length ? req : all;
+    return list.length > 0 && list.every(function (t) { return t.getAttribute('data-done') === '1'; });
+  }
+  function renderResult() {
+    var box = $('#stepResult'); if (!box) return;
+    var showQ = body.classList.contains('submitted') || body.classList.contains('solOpen'), rows = '', n = 0, d = 0;
+    links = [];
+    steps.forEach(function (s, i) {
+      $$('.task[data-done]', s).forEach(function (t) {
+        var ok = t.getAttribute('data-done') === '1', q = showQ ? (t.getAttribute('data-q') || '') : '', tt = ((t.querySelector('.tt') || {}).textContent || 'Aufgabe').trim();
+        var pt = t.getAttribute(showQ ? 'data-ptsq' : 'data-pts') || '';   /* Höchstpunkte, im Lehrkraft-Modus und nach der Abgabe erreichte Punkte */
+        n++; if (ok) d++; links.push([i, t]);
+        rows += '<tr><td>' + (i + 1) + '</td><td><button type="button" class="linkbtn" data-k="' + (links.length - 1) + '">' + esc(tt) + '</button>' +
+                (t.closest('.level.challenge') ? ' <small>(Profiniveau, freiwillig)</small>' : '') +
+                '</td><td class="' + (ok ? 'st-ok' : 'st-open') + '">' + (ok ? 'bearbeitet' : 'offen') + (q ? '<br><small>' + esc(q) + '</small>' : '') + '</td><td>' + esc(pt) + '</td></tr>';
+      });
+    });
+    var res = (($('#resultInfo') || {}).textContent || '').trim(), sub = $('#subBtn'), canSub = !!(sub && !sub.hidden);
+    box.innerHTML = (n ? '<div class="bar" aria-hidden="true"><i style="width:' + Math.round(d / n * 100) + '%"></i></div><p><b>' + d + ' von ' + n + ' Aufgaben bearbeitet</b></p>' +
+                         '<table><thead><tr><th>Schritt</th><th>Aufgabe</th><th>Stand</th><th>Punkte</th></tr></thead><tbody>' + rows + '</tbody></table>'
+                       : '<p>Auf dieser Seite gibt es keine Aufgaben mit Eingabefeldern.</p>') +
+                    (res ? '<p><b>' + esc(res) + '</b></p>' : '') +
+                    '<div class="stepactions">' + (canSub ? '<button type="button" class="btn" data-act="sub">Abgeben</button>' : '') +
+                    '<button type="button" class="btn' + (canSub ? ' alt' : '') + '" data-act="pdf">Als PDF speichern</button></div>';
+  }
+  var rbox = $('#stepResult');
+  if (rbox) rbox.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var act = b.getAttribute('data-act'), k = b.getAttribute('data-k');
+    if (act === 'sub') { $('#subBtn').click(); return; }
+    if (act === 'pdf') { $('#pdfBtn').click(); return; }
+    if (k === null || !links[+k]) return;
+    var t = links[+k][1], f = t.querySelector('input:not([type=hidden]), textarea, select');
+    show(links[+k][0]); t.scrollIntoView({ block: 'center' });
+    if (f) { try { f.focus({ preventScroll: true }); } catch (x) { f.focus(); } }
+  });
+  var pend = 0;
+  function refresh() { pend = 0; pills.forEach(function (p, k) { p.classList.toggle('done', stepDone(steps[k])); }); if (steps[cur].classList.contains('result')) renderResult(); }
+  function soon() { if (!pend) pend = setTimeout(refresh, 60); }
+  if (window.MutationObserver) {   /* data-done / data-q setzt das Script der Vorlage, body.submitted / solOpen ebenso */
+    new MutationObserver(soon).observe($('main'), { subtree: true, attributes: true, attributeFilter: ['data-done', 'data-q', 'data-ptsq'] });
+    new MutationObserver(soon).observe(body, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  /* ---------- Druck: alle Schritte zeigen, Textfelder und Seitenumbrüche neu messen (ausgeblendete Schritte waren 0 px hoch) ---------- */
+  window.addEventListener('beforeprint', function () {
+    body.classList.add('printAll');
+    if (!body.classList.contains('blankPrint')) $$('textarea').forEach(function (a) { a.style.height = 'auto'; a.style.height = a.scrollHeight + 'px'; });
+    $$('main .task, main .card').forEach(function (t) { t.classList.toggle('keep', t.getBoundingClientRect().height <= 250); });
+  });
+  window.addEventListener('afterprint', function () { body.classList.remove('printAll'); });
+
+  body.classList.add('stepsOn');
+  var start = 0;
+  try { start = parseInt(localStorage.getItem(KEY), 10) || 0; } catch (e) { /* ohne Speicher weiter */ }
+  show(Math.min(Math.max(start, 0), steps.length - 1), true);
+  refresh();
+})();
+</script>
+<!-- /Allgemeinbildung.html:script -->
+</body>
+</html>

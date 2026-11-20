@@ -1,0 +1,3 @@
+# Berufe für das Schriftfeld: eine Zeile pro Beruf, der zuletzt verwendete steht oben.
+# Claude zeigt die ersten vier im Auswahldialog. Ein neuer Beruf (eingetippt unter "Other") wird oben eingefügt,
+# ein gewählter Beruf wandert nach oben. Zeilen mit # werden ignoriert. Nicht benötigte Berufe einfach löschen.

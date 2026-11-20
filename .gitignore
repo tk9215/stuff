@@ -1,0 +1,12 @@
+__pycache__/
+.DS_Store
+# Arbeitsordner tmp/, nie versionieren (Bleibendes gehört nach Ressourcen/ oder ToDo/).
+# Nur die leere Platzhalterdatei tmp/.gitkeep liegt in Git, damit der Ordner bei jedem nach dem Klonen oder Pull da ist.
+tmp/*
+!tmp/.gitkeep
+
+# Feedback zu Schülerarbeiten bleibt lokal (Datenschutz)
+Unterricht/**/*-Feedback/
+
+# Lernpakete und Kurssicherungen liegen nicht in Git: GitHub baut sie nach dem Push aus Unterricht/ (Themenordner, Kurs-….json)
+# und stellt sie in den Teamordner zu (.github/workflows/paket-zustellen.yml). Lokal Gebautes landet im Temp-Ordner.

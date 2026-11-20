@@ -1,0 +1,453 @@
+<!doctype html>
+<!--
+  PRACTICE APP TEMPLATE (gleiches Aussehen wie .claude/gemeinsam/templates/Fachunterricht.html: Schriftfeld-Kopf, standardmäßig hell, Hell/Dunkel-Schalter).
+  Claude: Datei kopieren und NUR drei Dinge ändern:
+    1. das title-Tag
+    2. content von <meta name="loesung-hash"> = Wert hash= aus .claude/gemeinsam/data/solution-password.txt (siehe CLAUDE.md)
+    3. den JSON-Datenblock, der weiter unten mit "TEACHER: edit the questions here" markiert ist
+  Das CSS und das JavaScript NICHT ändern. Sie sind getestet.
+  JSON-Regeln: doppelte Anführungszeichen um jeden Text, kein Komma nach dem letzten Eintrag, ein Anführungszeichen im Text wird als \" geschrieben.
+  Schriftfeld (Kopf): "title", "subtitle", "beruf", "jahr" (Ausbildungsjahr), "lernfeld" (Lernfeld · Blockwoche), "hilfsmittel".
+    Klasse, Beruf, Lernfeld und Blockwoche per Auswahldialog (Skill Baue-E-Learning, Schritt 1, nur was fehlt); das Ausbildungsjahr folgt aus der Klasse.
+    Der Schülername wird NICHT eingetippt: Er wird aus der ByCS Lernplattform gelesen, wenn die App im SCORM-Paket läuft.
+  Version: <span class="ver"></span> im Benennungsfeld leer lassen. build-scorm.py (Skill Baue-Lernpaket) trägt "V1.3" und die
+    unsichtbare Änderungsliste (Kommentar VERSIONEN nach <title>) ein.
+  Lehrkraft-Modus: Knopf "Lehrkraft-Modus: Lösungen zeigen", nach dem Passwort (gleicher Hash wie Fachunterricht.html) erscheint eine Lösungsübersicht aller Einträge.
+  "lang": "de" oder "en" legt die Sprache der Schaltflächen und Meldungen fest (Standard "de").
+  "type" ist eines von: "quiz", "flashcards", "sort", "match". Formate der Einträge:
+    quiz:       "items": [ { "question", "options": [..], "answer": Index ab 0, "hint", "explanation" } ]
+    flashcards: "items": [ { "front", "back" } ]
+    sort:       "groups": ["Gruppe A","Gruppe B"], "items": [ { "text", "group": Index ab 0, "hint" (optional) } ]
+    match:      "items": [ { "left", "right" } ]   (3 bis 8 Paare)
+  Punkte für die ByCS Lernplattform (nur im SCORM-Paket, gebaut mit dem Skill Baue-Lernpaket): Quiz, Sortieren und Zuordnen melden jeden Eintrag
+  (richtig im ersten Versuch = Punkt). Optional bei jedem Eintrag: "level": "foundation" | "core" | "challenge" (Standard core) = 40 / 40 / 20 % der
+  Punkte (Einsteigerniveau / Prüfungsniveau / Profiniveau), Bestehen ab 70 %. Lernkarten: "abgeschlossen" (100 Punkte, bestanden), wenn alle Karten gewusst sind.
+-->
+<html lang="de" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="loesung-salt" content="bs-lernpaket|">
+<meta name="loesung-hash" content="">
+<title>Übung</title>
+<script>
+  window.addEventListener('error', function (e) {
+    var b = document.getElementById('app-error');
+    if (b) { b.style.display = 'block'; b.textContent = 'Etwas ist schiefgelaufen. Kopiere diese Meldung für Claude: ' + e.message; }
+  });
+</script>
+<style>
+  :root { --paper:#fbfcfd; --grid:rgba(40,80,120,.07); --ink:#1d2b3a; --ink2:#4d5d6e; --line:#b9c6d3; --panel:#ffffff;
+          --yellow:#f2b705; --yellowSoft:#fff4cc; --red:#c8322f; --redSoft:#fbe6e5; --green:#1f7a4a; --greenSoft:#e2f3ea;
+          --blue:#1f5f99; --blueSoft:#e5eef7; --black:#111111; }
+  :root[data-theme="dark"] {
+    --paper:#141b22; --grid:rgba(160,190,220,.06); --ink:#e3e9ef; --ink2:#a4b1bf; --line:#34424f; --panel:#1b242d;
+    --yellowSoft:#3a3113; --red:#ef6b66; --redSoft:#3b1f1f; --green:#5cc98f; --greenSoft:#18332a; --blue:#7fb2e5; --blueSoft:#1a2a3a; --black:#e3e9ef; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink);
+         font-family: Barlow, "Segoe UI", Roboto, Arial, sans-serif; font-size:17px; line-height:1.55;
+         background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+         background-size: 20px 20px; }
+  h1, h2, h3 { font-family: "Barlow Condensed", Barlow, "Arial Narrow", sans-serif; line-height:1.15; margin:0 0 .5em; }
+  p { margin:.5em 0 .9em; }
+  button, select, input, textarea { font:inherit; color:inherit; }
+  :focus-visible { outline:3px solid var(--yellow); outline-offset:2px; }
+  .wrap { max-width:820px; margin:0 auto; padding:0 18px; }
+
+  /* Kopf als Schriftfeld (wie Fachunterricht.html) */
+  .titleblock { margin:22px auto 0; max-width:820px; padding:0 18px; }
+  .tb { border:2px solid var(--ink); display:grid; grid-template-columns:1fr 1fr 1fr; background:var(--panel); }
+  .tb > div { border:1px solid var(--ink); padding:6px 10px; min-width:0; }
+  .tb small { display:block; font-size:.72rem; color:var(--ink2); }
+  .tb .name { grid-column:1/3; grid-row:1/3; }
+  .tb .name h1 { font-size:clamp(1.55rem,4.4vw,2.25rem); margin:.1em 0 0; }
+  .tb .name p { margin:0; color:var(--ink2); }
+  .tb .who { background:var(--yellowSoft); }
+  .tb .who b { display:block; font-size:1.3rem; line-height:1.2; overflow-wrap:anywhere; }
+  /* Version oben rechts im Benennungsfeld (trägt build-scorm.py ein), Datum nur im Druck */
+  .tb .ver { float:right; margin-left:1em; font-size:.85em; white-space:nowrap; }
+  .tb .ver:empty { display:none; }
+  @media (max-width:560px) { .tb { grid-template-columns:1fr 1fr; } .tb .name { grid-column:1/3; grid-row:auto; } }
+  .tools { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:14px 0 0; }
+  .tools button { background:var(--panel); border:1px solid var(--line); border-radius:3px; padding:5px 11px; cursor:pointer; font-size:.9rem; }
+
+  .tools .info { font-size:.9rem; color:var(--ink2); }
+
+  /* Übung */
+  main.wrap { padding-top:22px; padding-bottom:50px; }
+  .sub { color:var(--ink2); margin:0 0 12px; font-size:.95rem; }
+  .bar { height:10px; background:var(--line); border-radius:99px; overflow:hidden; margin:0 0 20px; }
+  .bar > div { height:100%; width:0; background:var(--blue); transition:width .3s; }
+  .card { background:var(--panel); border:1px solid var(--line); border-left:5px solid var(--blue); border-radius:2px; padding:20px 22px; }
+  .q { font-family:"Barlow Condensed", Barlow, "Arial Narrow", sans-serif; font-size:1.6rem; font-weight:700; line-height:1.2; margin:0 0 16px; }
+  .opts { display:grid; gap:10px; }
+  button { font:inherit; border:1px solid var(--line); background:var(--paper); color:var(--ink);
+           border-radius:3px; padding:11px 16px; cursor:pointer; text-align:left; min-height:48px; }
+  button:hover { border-color:var(--blue); }
+  button.primary { background:var(--ink); color:var(--paper); border-color:var(--ink); text-align:center; font-weight:600; }
+  button.ok { border:2px solid var(--green); background:var(--greenSoft); }
+  button.bad { border:2px solid var(--red); background:var(--redSoft); }
+  button.sel { border:2px solid var(--yellow); background:var(--yellowSoft); }
+  button:disabled { cursor:default; color:var(--ink); }
+  .row { display:flex; gap:12px; margin-top:16px; flex-wrap:wrap; }
+  .row > button { flex:1; text-align:center; }
+  .msg { margin-top:14px; padding:12px 16px; border-radius:2px; display:none; }
+  .msg.hint { display:block; background:var(--yellowSoft); border:1px solid var(--yellow); }
+  .msg.good { display:block; background:var(--greenSoft); border:1px solid var(--green); }
+  .msg.wrong { display:block; background:var(--redSoft); border:1px solid var(--red); }
+  .flash { min-height:220px; display:flex; align-items:center; justify-content:center; text-align:center;
+           font-family:"Barlow Condensed", Barlow, "Arial Narrow", sans-serif; font-size:1.8rem; font-weight:700; cursor:pointer;
+           background:var(--blueSoft); border:1px solid var(--line); border-radius:2px; padding:16px; }
+  .groups { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; margin-top:16px; }
+  .group { border:2px dashed var(--line); border-radius:2px; padding:12px; min-height:120px; }
+  .group h3 { margin:0 0 8px; font-size:1.15rem; }
+  .chip { display:inline-block; padding:5px 10px; margin:4px; border-radius:2px; background:var(--blueSoft); border:1px solid var(--line); font-size:.95rem; }
+  .match { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .end { text-align:center; }
+  .big { font-family:"Barlow Condensed", Barlow, "Arial Narrow", sans-serif; font-size:3rem; font-weight:700; margin:8px 0; }
+  #app-error { display:none; max-width:820px; margin:16px auto; background:var(--redSoft); color:var(--red); border:1px solid var(--red); border-radius:4px; padding:12px 16px; }
+
+  /* Lehrkraft-Modus: Lösungsübersicht und Passwortfenster (wie Fachunterricht.html) */
+  .key { margin-top:20px; border-left-color:var(--green); }
+  .key h2 { font-size:1.4rem; }
+  .key ol { margin:0; padding-left:1.4em; }
+  .key li { margin:0 0 10px; }
+  .key .ans { color:var(--green); font-weight:600; }
+  .key .exp { color:var(--ink2); font-size:.92rem; }
+  .key table { border-collapse:collapse; width:100%; }
+  .key td { border:1px solid var(--line); padding:6px 10px; vertical-align:top; }
+  .modal { position:fixed; inset:0; z-index:100; background:rgba(15,25,35,.6); display:flex; align-items:center; justify-content:center; padding:18px; overflow:auto; }
+  .modal[hidden] { display:none; }
+  .modalBox { background:var(--panel); border:2px solid var(--ink); max-width:470px; width:100%; padding:22px 24px; box-shadow:0 10px 40px rgba(0,0,0,.35); }
+  .modalBox h2 { margin:.15em 0 .3em; }
+  .modalBox label { font-size:.9rem; font-weight:600; }
+  .modalBox input[type=password] { width:100%; font-size:1.15rem; padding:9px 11px; margin:5px 0 2px; background:var(--paper); border:1px solid var(--ink2); border-radius:3px; }
+  .err { color:var(--red); font-weight:600; min-height:1.4em; margin:2px 0 6px; }
+  .btnrow { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .btn { background:var(--ink); color:var(--paper); border:0; border-radius:3px; padding:7px 14px; cursor:pointer; font-weight:600; min-height:0; text-align:center; }
+  .btn.alt { background:transparent; color:var(--ink); border:1px solid var(--line); }
+  body.modalOpen { overflow:hidden; }
+
+  @media print {
+    :root:root:root { --paper:#fbfcfd; --grid:transparent; --ink:#1d2b3a; --ink2:#4d5d6e; --line:#b9c6d3; --panel:#ffffff;
+          --yellowSoft:#fff4cc; --red:#c8322f; --redSoft:#fbe6e5; --green:#1f7a4a; --greenSoft:#e2f3ea; --blue:#1f5f99; --blueSoft:#e5eef7; --black:#111111; }
+    body { background:#fff; color:#000; background-image:none; }
+    .tools, #app-error, .modal { display:none !important; }
+    .tb .ver[data-datum]::after { content:" · " attr(data-datum); }
+  }
+</style>
+</head>
+<body>
+<div id="app-error"></div>
+
+<header class="titleblock">
+  <div class="tb">
+    <div class="name"><small>Benennung<span class="ver"></span></small><h1 id="title"></h1><p id="subtitle"></p></div>
+    <div><small>Beruf</small><span id="tbBeruf">–</span></div>
+    <div><small>Ausbildungsjahr</small><span id="tbJahr">–</span></div>
+    <div><small>Lernfeld · Blockwoche</small><span id="tbLf">–</span></div>
+    <div><small>Hilfsmittel</small><span id="tbHilf">–</span></div>
+    <div class="who"><small>Name</small><b id="nameOut">–</b></div>
+  </div>
+  <div class="tools">
+    <button type="button" id="tglTheme">Hell / Dunkel</button>
+    <button type="button" id="tglSol" aria-pressed="false">Lehrkraft-Modus: Lösungen zeigen</button>
+    <span class="info" id="lmsInfo" role="status"></span>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="bar"><div id="progress"></div></div>
+  <div class="card" id="app"><p>Lädt …</p></div>
+  <section class="card key" id="key" hidden></section>
+</main>
+
+<!-- Passwort für Lösungen -->
+<div class="modal" id="pwModal" role="dialog" aria-modal="true" aria-labelledby="pwT" hidden>
+  <form class="modalBox" id="pwForm" autocomplete="off">
+    <h2 id="pwT">Lösungen – nur für Lehrkräfte</h2>
+    <p>Die Lösungen sind durch ein Passwort geschützt.</p>
+    <label for="pwIn">Passwort</label>
+    <input id="pwIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="err" id="pwErr" role="alert"></div>
+    <div class="btnrow"><button class="btn" type="submit">Lösungen freischalten</button><button class="btn alt" type="button" id="pwCancel">Abbrechen</button></div>
+  </form>
+</div>
+
+<!-- TEACHER: edit the questions here. Keep the double quotes. -->
+<script id="app-data" type="application/json">
+{
+  "title": "Messschieber",
+  "subtitle": "Quiz mit Tipps",
+  "beruf": "Grundbildung Metall",
+  "jahr": "1. Jahr",
+  "lernfeld": "LF 1 · Block 1",
+  "hilfsmittel": "keine",
+  "lang": "de",
+  "type": "quiz",
+  "items": [
+    {
+      "question": "Womit kannst du die Tiefe einer Bohrung messen?",
+      "options": ["Mit der Tiefenmessstange des Messschiebers", "Mit dem Stahlmaßstab quer über die Bohrung", "Mit dem Winkelmesser"],
+      "answer": 0,
+      "hint": "Am Messschieber gibt es hinten einen dünnen Stab, der ausfährt.",
+      "explanation": "Die Tiefenmessstange liegt am Bohrungsgrund an, die Tiefe liest du an der Skala ab."
+    }
+  ]
+}
+</script>
+
+<script>
+function sha256(ascii){function rr(v,a){return(v>>>a)|(v<<(32-a))}var mw=Math.pow(2,32),res='',w=[],bl=ascii.length*8,i,j,H=[],K=[],pc=0,comp={};
+  for(var c=2;pc<64;c++){if(!comp[c]){for(i=0;i<313;i+=c)comp[i]=c;H[pc]=(Math.pow(c,.5)*mw)|0;K[pc++]=(Math.pow(c,1/3)*mw)|0}}
+  ascii+='\x80';while(ascii.length%64-56)ascii+='\x00';
+  for(i=0;i<ascii.length;i++){j=ascii.charCodeAt(i);if(j>>8)return '';w[i>>2]|=j<<((3-i)%4)*8}
+  w[w.length]=((bl/mw)|0);w[w.length]=bl;
+  for(j=0;j<w.length;){var ww=w.slice(j,j+=16),old=H;H=H.slice(0,8);
+    for(i=0;i<64;i++){var w15=ww[i-15],w2=ww[i-2],a=H[0],e=H[4];
+      var t1=H[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&H[5])^((~e)&H[6]))+K[i]+(ww[i]=(i<16)?ww[i]:(ww[i-16]+(rr(w15,7)^rr(w15,18)^(w15>>>3))+ww[i-7]+(rr(w2,17)^rr(w2,19)^(w2>>>10)))|0);
+      var t2=(rr(a,2)^rr(a,13)^rr(a,22))+((a&H[1])^(a&H[2])^(H[1]&H[2]));
+      H=[(t1+t2)|0].concat(H);H[4]=(H[4]+t1)|0}
+    for(i=0;i<8;i++)H[i]=(H[i]+old[i])|0}
+  for(i=0;i<8;i++)for(j=3;j+1;j--){var b=(H[i]>>(j*8))&255;res+=((b<16)?0:'')+b.toString(16)}return res}
+</script>
+
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById('app-data').textContent);
+  var app = document.getElementById('app');
+  var bar = document.getElementById('progress');
+  var root = document.documentElement;
+  function byId(i) { return document.getElementById(i); }
+  byId('title').textContent = data.title || 'Übung';
+  byId('subtitle').textContent = data.subtitle || '';
+  document.title = data.title || 'Übung';
+  [['tbBeruf', data.beruf], ['tbJahr', data.jahr], ['tbLf', data.lernfeld], ['tbHilf', data.hilfsmittel]].forEach(function (p) { byId(p[0]).textContent = p[1] || '–'; });
+
+  /* ---------- Lernplattform (nur im SCORM-Paket): Name lesen und Punkte melden ---------- */
+  /* Jede Aufgabe (quiz / sort / match) ist eine bewertete Aufgabe "q1", "q2" ...; richtig = beim ersten Versuch richtig.
+     Optional "level": "foundation" | "core" | "challenge" je Aufgabe (Standard: core) = 40 / 40 / 20 % der Punkte, Bestehen ab 70 %.
+     Ein besseres Ergebnis ersetzt ein schlechteres, ein schlechteres nie ein besseres. Karteikarten: "abgeschlossen" = 100 Punkte, bestanden. */
+  var lms = (typeof ScormReport !== 'undefined') ? ScormReport : null, scoring = data.type !== 'flashcards', best = {};
+  function lmsOn() { return !!(lms && lms.connected); }
+  function levelOf(it) { return it && (it.level === 'foundation' || it.level === 'challenge') ? it.level : 'core'; }
+  if (lms) {
+    try {
+      var lv = { foundation: 0, core: 0, challenge: 0 };
+      (data.items || []).forEach(function (it) { lv[levelOf(it)]++; });
+      ScormReport.init(scoring ? { levels: lv } : { scoring: false });
+      if (lms.connected) {
+        byId('nameOut').textContent = lms.studentName() || '–';
+        var st = lms.loadState(); if (st && st.best) best = st.best;
+        byId('lmsInfo').textContent = scoring ? 'Dein Ergebnis wird an die Lernplattform gemeldet.' : '';
+      }
+    } catch (e) { /* ohne Lernplattform weiter */ }
+  }
+  function report(idx, ok, info) {
+    if (!lmsOn() || !scoring) return;
+    var id = 'q' + (idx + 1);
+    if (best[id] === 1 || (best[id] === 0 && !ok)) return;
+    best[id] = ok ? 1 : 0;
+    info = info || {}; info.level = levelOf((data.items || [])[idx]);
+    try { ScormReport.answer(id, ok, info); lms.saveState({ best: best }); } catch (e) { /* still */ }
+  }
+  function reportDone() { if (lmsOn() && !scoring) { try { lms.complete(); } catch (e) { /* still */ } } }
+
+  /* ---------- Hell / Dunkel ---------- */
+  try { var sv = localStorage.getItem('page-theme'); if (sv === 'dark' || sv === 'light') root.setAttribute('data-theme', sv); } catch (e) { /* ohne Speicher weiter */ }
+  byId('tglTheme').addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; root.setAttribute('data-theme', next);
+    try { localStorage.setItem('page-theme', next); } catch (e) { /* still */ }
+  });
+
+  var T = {
+    en: { done:'Well done!', all:'Everything right. Great work!', more:'Practise again to get even better.', again:'Try again',
+          q:'Question', of:'of', correct:'Correct! ', hint:'Hint: ', notq:'Not quite. ', next:'Next', flip:'Tap the card to flip it',
+          practise:'Practise again', knew:'I knew it', where:'Where does this belong?', notgroup:'Not this group. Try again.',
+          tap:'Tap a word on the left, then its partner on the right.', match:'Match!', notpair:'Not a pair. Try another one.', error:'Something went wrong. Copy this message to Claude: ' },
+    de: { done:'Gut gemacht!', all:'Alles richtig. Super!', more:'Übe noch einmal, dann wirst du noch besser.', again:'Nochmal',
+          q:'Frage', of:'von', correct:'Richtig! ', hint:'Tipp: ', notq:'Leider nicht. ', next:'Weiter', flip:'Tippe auf die Karte, um sie umzudrehen',
+          practise:'Nochmal üben', knew:'Wusste ich', where:'Wohin gehört das?', notgroup:'Nicht diese Gruppe. Versuch es nochmal.',
+          tap:'Tippe links auf ein Wort und dann rechts auf den passenden Partner.', match:'Passt!', notpair:'Kein Paar. Versuch ein anderes.', error:'Etwas ist schiefgelaufen. Kopiere diese Meldung für Claude: ' }
+  };
+  var t = T[data.lang] || T.de;
+  root.lang = T[data.lang] ? data.lang : 'de';
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function clear() { while (app.firstChild) app.removeChild(app.firstChild); }
+  function progress(done, total) { bar.style.width = (total ? Math.round(100 * done / total) : 0) + '%'; }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function endScreen(score, total, again) {
+    clear(); progress(1, 1);
+    var d = el('div', 'end');
+    d.appendChild(el('p', null, t.done));
+    if (total) d.appendChild(el('p', 'big', score + ' / ' + total));
+    d.appendChild(el('p', null, score === total ? t.all : t.more));
+    var b = el('button', 'primary', t.again); b.onclick = again; d.appendChild(b);
+    app.appendChild(d);
+  }
+
+  function quiz() {
+    var items = data.items || [], i = 0, score = 0;
+    function show() {
+      if (i >= items.length) return endScreen(score, items.length, function () { i = 0; score = 0; show(); });
+      progress(i, items.length); clear();
+      var it = items[i], tries = 0, done = false;
+      app.appendChild(el('p', 'sub', t.q + ' ' + (i + 1) + ' ' + t.of + ' ' + items.length));
+      app.appendChild(el('p', 'q', it.question));
+      var opts = el('div', 'opts'), msg = el('div', 'msg'), next = el('button', 'primary', t.next);
+      next.style.display = 'none'; next.style.marginTop = '16px';
+      next.onclick = function () { i++; show(); };
+      (it.options || []).forEach(function (o, k) {
+        var b = el('button', null, o);
+        b.onclick = function () {
+          if (done) return;
+          if (k === it.answer) {
+            b.className = 'ok'; done = true; if (tries === 0) score++;
+            report(i, tries === 0, { type: 'choice', response: lms && lms.letter(k), correctResponse: lms && lms.letter(it.answer) });
+            msg.className = 'msg good'; msg.textContent = t.correct + (it.explanation || '');
+            next.style.display = 'block';
+          } else {
+            tries++; b.className = 'bad'; b.disabled = true;
+            if (tries === 1 && it.hint) { msg.className = 'msg hint'; msg.textContent = t.hint + it.hint; }
+            else { msg.className = 'msg wrong'; msg.textContent = t.notq + (it.explanation || ''); done = true;
+                   report(i, false, { type: 'choice', response: lms && lms.letter(k), correctResponse: lms && lms.letter(it.answer) });
+                   opts.children[it.answer].className = 'ok'; next.style.display = 'block'; }
+          }
+        };
+        opts.appendChild(b);
+      });
+      app.appendChild(opts); app.appendChild(msg); app.appendChild(next);
+    }
+    show();
+  }
+
+  function flashcards() {
+    var all = data.items || [], queue = shuffle(all.map(function (_, k) { return k; })), known = 0;
+    function show() {
+      if (!queue.length) reportDone();
+      if (!queue.length) return endScreen(all.length, all.length, function () { queue = shuffle(all.map(function (_, k) { return k; })); known = 0; show(); });
+      progress(known, all.length); clear();
+      var c = all[queue[0]], front = true;
+      var card = el('div', 'flash', c.front);
+      card.onclick = function () { front = !front; card.textContent = front ? c.front : c.back; };
+      app.appendChild(el('p', 'sub', t.flip));
+      app.appendChild(card);
+      var row = el('div', 'row');
+      var again = el('button', null, t.practise), knew = el('button', 'primary', t.knew);
+      again.onclick = function () { queue.push(queue.shift()); show(); };
+      knew.onclick = function () { queue.shift(); known++; show(); };
+      row.appendChild(again); row.appendChild(knew); app.appendChild(row);
+    }
+    show();
+  }
+
+  function sort() {
+    var groups = data.groups || [], items = shuffle(data.items || []), i = 0, score = 0, placed = groups.map(function () { return []; });
+    function show() {
+      clear(); progress(i, items.length);
+      if (i >= items.length) return endScreen(score, items.length, function () { items = shuffle(data.items || []); i = 0; score = 0; placed = groups.map(function () { return []; }); show(); });
+      var it = items[i], idx = (data.items || []).indexOf(it), missed = false;
+      app.appendChild(el('p', 'sub', t.where + ' (' + (i + 1) + ' ' + t.of + ' ' + items.length + ')'));
+      app.appendChild(el('p', 'q', it.text));
+      var row = el('div', 'opts'), msg = el('div', 'msg');
+      groups.forEach(function (g, k) {
+        var b = el('button', null, g);
+        b.onclick = function () {
+          if (k === it.group) { if (!missed) score++; report(idx, !missed, { type: 'choice', response: lms && lms.letter(k), correctResponse: lms && lms.letter(it.group) });
+                                placed[k].push(it.text); i++; show(); }
+          else { missed = true; b.className = 'bad'; msg.className = 'msg hint'; msg.textContent = it.hint ? t.hint + it.hint : t.notgroup; }
+        };
+        row.appendChild(b);
+      });
+      app.appendChild(row); app.appendChild(msg);
+      var gw = el('div', 'groups');
+      groups.forEach(function (g, k) { var box = el('div', 'group'); box.appendChild(el('h3', null, g));
+        placed[k].forEach(function (t) { box.appendChild(el('span', 'chip', t)); }); gw.appendChild(box); });
+      app.appendChild(gw);
+    }
+    show();
+  }
+
+  function match() {
+    var pairs = data.items || [], done = 0, pickedLeft = null, leftBtns = [], rightBtns = [], missed = {};
+    clear(); progress(0, pairs.length);
+    app.appendChild(el('p', 'sub', t.tap));
+    var grid = el('div', 'match'), L = el('div', 'opts'), R = el('div', 'opts'), msg = el('div', 'msg');
+    pairs.forEach(function (p, k) {
+      var b = el('button', null, p.left);
+      b.onclick = function () { if (b.disabled) return; leftBtns.forEach(function (x) { if (!x.disabled) x.className = ''; }); b.className = 'sel'; pickedLeft = k; };
+      leftBtns.push(b); L.appendChild(b);
+    });
+    shuffle(pairs.map(function (_, k) { return k; })).forEach(function (k) {
+      var b = el('button', null, pairs[k].right);
+      b.onclick = function () {
+        if (pickedLeft === null || b.disabled) return;
+        if (pickedLeft === k) { b.className = 'ok'; leftBtns[k].className = 'ok'; b.disabled = true; leftBtns[k].disabled = true;
+          report(k, !missed[k], { type: 'other' });
+          pickedLeft = null; done++; progress(done, pairs.length); msg.className = 'msg good'; msg.textContent = t.match;
+          if (done === pairs.length) setTimeout(function () { endScreen(pairs.length, pairs.length, match); }, 700); }
+        else { missed[pickedLeft] = true; msg.className = 'msg hint'; msg.textContent = t.notpair; }
+      };
+      rightBtns.push(b); R.appendChild(b);
+    });
+    grid.appendChild(L); grid.appendChild(R); app.appendChild(grid); app.appendChild(msg);
+  }
+
+  /* ---------- Lehrkraft-Modus: Passwort (gleicher Hash wie Fachunterricht.html) und Lösungsübersicht ---------- */
+  function meta(n) { var m = document.querySelector('meta[name="' + n + '"]'); return m ? m.getAttribute('content') || '' : ''; }
+  var keyBox = byId('key'), pend = null;
+  function openModal() { byId('pwModal').hidden = false; document.body.classList.add('modalOpen'); }
+  function closeModal() { byId('pwModal').hidden = true; document.body.classList.remove('modalOpen'); }
+  function askPw(cb) { pend = cb; byId('pwIn').value = ''; byId('pwErr').textContent = ''; openModal(); setTimeout(function () { byId('pwIn').focus(); }, 30); }
+  function keyRow(tb, a, b) { var tr = el('tr'); tr.appendChild(el('td', null, a)); tr.appendChild(el('td', null, b)); tb.appendChild(tr); }
+  function buildKey() {
+    while (keyBox.firstChild) keyBox.removeChild(keyBox.firstChild);
+    keyBox.appendChild(el('h2', null, 'Lösungen (nur Lehrkraft)'));
+    var items = data.items || [];
+    if (data.type === 'sort') {
+      (data.groups || []).forEach(function (g, k) {
+        keyBox.appendChild(el('h3', null, g));
+        var ul = el('ul');
+        items.forEach(function (it) { if (it.group === k) ul.appendChild(el('li', null, it.text)); });
+        keyBox.appendChild(ul);
+      });
+    } else if (data.type === 'flashcards' || data.type === 'match') {
+      var tb = el('table');
+      items.forEach(function (it) { if (data.type === 'match') keyRow(tb, it.left, it.right); else keyRow(tb, it.front, it.back); });
+      keyBox.appendChild(tb);
+    } else {
+      var ol = el('ol');
+      items.forEach(function (it) {
+        var li = el('li');
+        li.appendChild(el('div', null, it.question));
+        li.appendChild(el('div', 'ans', '✓ ' + ((it.options || [])[it.answer] || '')));
+        if (it.explanation) li.appendChild(el('div', 'exp', it.explanation));
+        ol.appendChild(li);
+      });
+      keyBox.appendChild(ol);
+    }
+  }
+  function setSol(on) {
+    if (on) buildKey();
+    keyBox.hidden = !on;
+    var b = byId('tglSol'); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.textContent = on ? 'Lehrkraft-Modus: Lösungen verbergen' : 'Lehrkraft-Modus: Lösungen zeigen';
+  }
+  byId('tglSol').addEventListener('click', function () { if (!keyBox.hidden) setSol(false); else askPw(function () { setSol(true); }); });
+  byId('pwForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var hash = meta('loesung-hash'), v = byId('pwIn').value.trim().toUpperCase();
+    if (!hash) { byId('pwErr').textContent = 'Für diese Seite ist kein Passwort hinterlegt.'; return; }
+    if (sha256(meta('loesung-salt') + v) === hash) { var cb = pend; pend = null; closeModal(); if (cb) setTimeout(cb, 0); }
+    else { byId('pwErr').textContent = 'Falsches Passwort.'; byId('pwIn').select(); }
+  });
+  byId('pwCancel').addEventListener('click', function () { pend = null; closeModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !byId('pwModal').hidden) { pend = null; closeModal(); } });
+
+  var modes = { quiz: quiz, flashcards: flashcards, sort: sort, match: match };
+  (modes[data.type] || quiz)();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Skill-Liste im Handbuch (#Handbuch.html): Skill | Wofür, in einfachen Worten | Beispiel, was man zu Claude sagt
+# Die Reihenfolge hier ist die Reihenfolge im Handbuch. Ein Skill ohne Zeile erscheint trotzdem:
+# handbuch.py nimmt dann Beschreibung und Auslöser aus seiner SKILL.md (und erinnert daran, ihn hier einzutragen).
+# Zeilen mit # werden ignoriert.
+
+Baue-E-Learning | Erstellt ein interaktives Lernangebot aus Aufgaben und Lösung oder überarbeitet eine vorhandene HTML-Seite | Erstelle ein Lernangebot aus diesen Unterlagen
+Baue-Testvorbereitung | Erstellt ein Lernskript, Übungen, eine Prüfungssimulation und eine Papierversion | Erstelle eine Testvorbereitung zu diesem Thema
+Baue-Lernpaket | Bereitet ein Lernangebot als Paket für eine Lernplattform auf | Erstelle ein Lernpaket aus diesem Ordner
+Baue-Kurs | Erstellt eine Kurssicherung aus fertigen Materialien | Erstelle einen Kurs aus diesen Materialien
+Baue-Arbeitsblatt | Erstellt ein Arbeitsblatt in drei Schwierigkeitsstufen mit Lösung | Erstelle ein Arbeitsblatt zu diesem Thema
+ByCS-Fragenersteller | Erstellt Fragen für einen Online-Test und eine Vorschau | Erstelle Testfragen zu diesem Thema
+ByCS-Test | Erstellt eine fertige Test-Aktivität für eine Lernplattform | Erstelle einen Test zu diesem Thema
+Uebungs-App | Erstellt ein kleines Lernspiel als einzelne Seite | Erstelle Lernkarten zu diesem Thema
+Einheit-planen | Plant eine Unterrichtsreihe mit Terminen und Kalenderdatei | Plane eine Unterrichtsreihe zu diesem Thema
+Raster-Feedback | Gibt konkretes Feedback zu anonymisierten Arbeiten anhand eines Bewertungsrasters | Gib Feedback zu dieser anonymisierten Arbeit
+Notizen | Verwaltet den gemeinsamen Notizzettel und Themenordner | Notier: Dieses Thema weiter bearbeiten
+ByCS-Kursbanner | Erstellt ein Kursbanner mit Fach, Stufe und Bild | Erstelle ein Kursbanner für ein Fach
